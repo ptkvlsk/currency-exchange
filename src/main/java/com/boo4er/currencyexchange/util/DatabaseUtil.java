@@ -12,7 +12,7 @@ import java.sql.Statement;
 
 public class DatabaseUtil {
 
-    private static final String DB_PATH = "src/main/resources/currency.db";
+    private static final String DB_PATH = "data/currency.db";
     private static final String DB_URL = "jdbc:sqlite:" + DB_PATH;
     private static final String INIT_SCRIPT_PATH = "db/init.sql";
     private static boolean isInitialized = false;
@@ -61,7 +61,7 @@ public class DatabaseUtil {
                 }
                 System.out.println("База данных успешно инициализирована");
             } catch (SQLException e) {
-                System.err.println("Ошибка при инициализации базы жданных");
+                System.err.println("Ошибка при инициализации базы данных");
                 e.printStackTrace();
             }
         } catch (Exception e) {

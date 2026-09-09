@@ -1,12 +1,12 @@
-CREATE TABLE IF NOT EXISTS Currencies(
-    ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    Code TEXT UNIQUE NOT NULL,
-    FullName TEXT NOT NULL,
-    Sign TEXT NOT NULL
+CREATE TABLE IF NOT EXISTS currencies(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    code TEXT UNIQUE NOT NULL,
+    full_name TEXT NOT NULL,
+    sign TEXT NOT NULL
 );
 
-INSERT OR IGNORE INTO Currencies (Code, FullName, Sign) VALUES
-                                                  ('USD', 'United States dollar', '$'),
-                                                  ('EUR', 'EURO', '€'),
-                                                  ('RUB','Russian Ruble','₽'),
-                                                  ('GPB','British Pound', '£');
+INSERT OR IGNORE INTO currencies (code, full_name, sign) VALUES
+     ('USD', 'United States dollar', '$'),
+     ('EUR', 'EURO', '€'),
+     ('RUB', 'Russian Ruble', '₽'),
+     ('GBP', 'British Pound', '£');
