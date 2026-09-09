@@ -33,14 +33,14 @@ public class DatabaseUtil {
     }
 
     private static void executeInitScript() {
-        InputStream is = DatabaseUtil.class.getClassLoader().getResourceAsStream(INIT_SCRIPT_PATH);
+        InputStream inputStream = DatabaseUtil.class.getClassLoader().getResourceAsStream(INIT_SCRIPT_PATH);
 
-        if (is == null) {
+        if (inputStream == null) {
             System.err.println("Файл init.sql не найден в ресурсах");
             return;
         }
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
 
             StringBuilder sql = new StringBuilder();
             String line;
