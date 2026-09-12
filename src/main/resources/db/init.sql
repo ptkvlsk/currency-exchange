@@ -10,3 +10,4 @@ INSERT OR IGNORE INTO currencies (code, full_name, sign) VALUES
      ('EUR', 'EURO', '€'),
      ('RUB', 'Russian Ruble', '₽'),
      ('GBP', 'British Pound', '£');
+
