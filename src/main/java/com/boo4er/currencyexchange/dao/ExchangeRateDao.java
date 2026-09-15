@@ -7,6 +7,7 @@ import com.boo4er.currencyexchange.model.ExchangeRate;
 import com.boo4er.currencyexchange.util.DatabaseUtil;
 import com.boo4er.currencyexchange.model.Currency;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -124,6 +125,31 @@ public class ExchangeRateDao {
         } catch (SQLException e) {
             throw new DatabaseException("Ошибка при создании курса", e);
         }
+    }
+
+    public ExchangeRate update(String baseCode, String targetCode, BigDecimal newRate) throws AppException {
+
+        String sql = """
+                UPDATE exchange_rates SET rate = ?
+                WHERE base_currency_id = ( SELECT id FROM currencies WHERE code =?)
+                AND target_currency_id = ( SELECT id FROM currencies WHERE code = ?)
+                """;
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+
+            preparedStatement.setBigDecimal(1, newRate);
+            preparedStatement.setString(2, baseCode);
+            preparedStatement.setString(3, targetCode);
+
+            int rows = preparedStatement.executeUpdate();
+            if (rows == 0) {
+                throw new NotFoundException("Курс для пары " + baseCode + " " + targetCode + " не найден");
+            }
+        } catch (SQLException e) {
+            throw new DatabaseException("Ошибка при обновлении курса", e);
+        }
+        return findByPair(baseCode, targetCode);
     }
 }
 
