@@ -1,6 +1,7 @@
 package com.boo4er.currencyexchange.dao;
 
 import com.boo4er.currencyexchange.exception.AppException;
+import com.boo4er.currencyexchange.exception.ConflictException;
 import com.boo4er.currencyexchange.exception.DatabaseException;
 import com.boo4er.currencyexchange.exception.NotFoundException;
 import com.boo4er.currencyexchange.model.Currency;
@@ -75,6 +76,9 @@ public class CurrencyDao {
             }
             return currency;
         } catch (SQLException e) {
+            if (e.getMessage() != null && e.getMessage().contains("UNIQUE constraint")) {
+                throw new ConflictException("Валюта с кодом " + currency.getCode() + " уже существует");
+            }
             throw new DatabaseException("Ошибка при сохранении валюты", e);
         }
     }

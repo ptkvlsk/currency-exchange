@@ -1,6 +1,7 @@
 package com.boo4er.currencyexchange.dao;
 
 import com.boo4er.currencyexchange.exception.AppException;
+import com.boo4er.currencyexchange.exception.ConflictException;
 import com.boo4er.currencyexchange.exception.DatabaseException;
 import com.boo4er.currencyexchange.exception.NotFoundException;
 import com.boo4er.currencyexchange.model.ExchangeRate;
@@ -123,6 +124,10 @@ public class ExchangeRateDao {
             }
             return exchangeRate;
         } catch (SQLException e) {
+            if (e.getMessage() != null && e.getMessage().contains("UNIQUE constraint")) {
+                throw new ConflictException("Валютная пара " + exchangeRate.getBaseCurrency().getCode() +
+                        " " + exchangeRate.getTargetCurrency().getCode() + " уже существует");
+            }
             throw new DatabaseException("Ошибка при создании курса", e);
         }
     }
