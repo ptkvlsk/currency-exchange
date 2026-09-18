@@ -17,6 +17,14 @@ public class DatabaseUtil {
     private static final String INIT_SCRIPT_PATH = "db/init.sql";
     private static boolean isInitialized = false;
 
+    static {
+        try {
+            Class.forName("org.sqlite.JDBC");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException("Не удалось загрузить драйвер SQLite", e);
+        }
+    }
+
     public static Connection getConnection() throws SQLException {
         if (!isInitialized) {
             initializeDatabase();
