@@ -31,7 +31,7 @@ public class CurrencyServlet extends BaseServlet {
 
             Currency currency = currencyDao.findByCode(code);
             sendJson(resp, SC_OK, currency);
-        }catch (AppException e){
+        } catch (AppException e) {
             handleException(resp, e);
         }
     }

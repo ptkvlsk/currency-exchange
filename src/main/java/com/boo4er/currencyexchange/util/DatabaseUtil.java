@@ -34,6 +34,10 @@ public class DatabaseUtil {
 
     private static void initializeDatabase() {
         File dbFile = new File(DB_PATH);
+        File parentDir = dbFile.getParentFile();
+        if (parentDir != null && !parentDir.exists()) {
+            parentDir.mkdirs();
+        }
         if (!dbFile.exists()) {
             executeInitScript();
         }

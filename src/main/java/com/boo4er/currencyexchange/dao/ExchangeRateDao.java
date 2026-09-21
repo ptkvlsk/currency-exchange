@@ -4,12 +4,15 @@ import com.boo4er.currencyexchange.exception.AppException;
 import com.boo4er.currencyexchange.exception.ConflictException;
 import com.boo4er.currencyexchange.exception.DatabaseException;
 import com.boo4er.currencyexchange.exception.NotFoundException;
+import com.boo4er.currencyexchange.model.Currency;
 import com.boo4er.currencyexchange.model.ExchangeRate;
 import com.boo4er.currencyexchange.util.DatabaseUtil;
-import com.boo4er.currencyexchange.model.Currency;
 
 import java.math.BigDecimal;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -109,7 +112,7 @@ public class ExchangeRateDao {
         String sql = "INSERT INTO exchange_rates (base_currency_id, target_currency_id, rate) VALUES (?, ?, ?)";
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
 
             preparedStatement.setInt(1, exchangeRate.getBaseCurrency().getId());
             preparedStatement.setInt(2, exchangeRate.getTargetCurrency().getId());
@@ -117,12 +120,7 @@ public class ExchangeRateDao {
 
             preparedStatement.executeUpdate();
 
-            try (ResultSet keys = preparedStatement.getGeneratedKeys()) {
-                if (keys.next()) {
-                    exchangeRate.setId(keys.getInt(1));
-                }
-            }
-            return exchangeRate;
+            return findByPair(exchangeRate.getBaseCurrency().getCode(), exchangeRate.getTargetCurrency().getCode());
         } catch (SQLException e) {
             if (e.getMessage() != null && e.getMessage().contains("UNIQUE constraint")) {
                 throw new ConflictException("Валютная пара " + exchangeRate.getBaseCurrency().getCode() +

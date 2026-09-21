@@ -7,7 +7,10 @@ import com.boo4er.currencyexchange.exception.NotFoundException;
 import com.boo4er.currencyexchange.model.Currency;
 import com.boo4er.currencyexchange.util.DatabaseUtil;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,19 +65,15 @@ public class CurrencyDao {
         String sql = "INSERT INTO currencies (code, full_name, sign) VALUES (?, ?, ?)";
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
             preparedStatement.setString(1, currency.getCode());
             preparedStatement.setString(2, currency.getFullName());
             preparedStatement.setString(3, currency.getSign());
 
             preparedStatement.executeUpdate();
 
-            try (ResultSet keys = preparedStatement.getGeneratedKeys()) {
-                if (keys.next()) {
-                    currency.setId(keys.getInt(1));
-                }
-            }
-            return currency;
+            return findByCode(currency.getCode());
+
         } catch (SQLException e) {
             if (e.getMessage() != null && e.getMessage().contains("UNIQUE constraint")) {
                 throw new ConflictException("Валюта с кодом " + currency.getCode() + " уже существует");
