@@ -1,5 +1,8 @@
 package com.boo4er.currencyexchange.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
@@ -16,6 +19,7 @@ public class DatabaseUtil {
     private static final String DB_URL = "jdbc:sqlite:" + DB_PATH;
     private static final String INIT_SCRIPT_PATH = "db/init.sql";
     private static boolean isInitialized = false;
+    private static final Logger log = LoggerFactory.getLogger(DatabaseUtil.class);
 
     static {
         try {
@@ -48,7 +52,7 @@ public class DatabaseUtil {
         InputStream inputStream = DatabaseUtil.class.getClassLoader().getResourceAsStream(INIT_SCRIPT_PATH);
 
         if (inputStream == null) {
-            System.err.println("Файл init.sql не найден в ресурсах");
+            log.error("Файл init.sql не найден в ресурсах");
             return;
         }
 
@@ -71,14 +75,12 @@ public class DatabaseUtil {
                         statement.execute(trimmed);
                     }
                 }
-                System.out.println("База данных успешно инициализирована");
+                log.info("База данных успешно инициализирована");
             } catch (SQLException e) {
-                System.err.println("Ошибка при инициализации базы данных");
-                e.printStackTrace();
+                log.error("Ошибка при инициализации базы данных", e);
             }
         } catch (Exception e) {
-            System.err.println("Ошибка при чтении файла init.sql");
-            e.printStackTrace();
+            log.error("Ошибка при чтении файла init.sql", e);
         }
     }
 
@@ -87,7 +89,7 @@ public class DatabaseUtil {
             try {
                 connection.close();
             } catch (SQLException e) {
-                e.printStackTrace();
+                log.error("Ошибка при закрытии соединения", e);
             }
         }
     }

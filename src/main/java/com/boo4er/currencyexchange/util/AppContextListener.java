@@ -3,19 +3,23 @@ package com.boo4er.currencyexchange.util;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 
 @WebListener
 public class AppContextListener implements ServletContextListener {
+
+    private static final Logger log = LoggerFactory.getLogger(AppContextListener.class);
+
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         try (Connection conn = DatabaseUtil.getConnection()) {
-            System.out.println("База данных инициализирована при старте приложения");
+            log.info("База данных инициализирована при старте приложения");
         } catch (SQLException e) {
-            System.err.println("Не удалось инициализировать БД:");
-            e.printStackTrace();
+            log.error("Не удалось инициализировать БД", e);
         }
     }
 
