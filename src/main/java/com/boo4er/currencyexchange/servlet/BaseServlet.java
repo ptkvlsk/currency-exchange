@@ -3,7 +3,9 @@ package com.boo4er.currencyexchange.servlet;
 import com.boo4er.currencyexchange.dto.ErrorResponse;
 import com.boo4er.currencyexchange.exception.AppException;
 import com.boo4er.currencyexchange.util.JsonUtil;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,5 +42,19 @@ public abstract class BaseServlet extends HttpServlet {
             log.error("Неожиданная ошибка при обработке запроса", e);
             sendJson(resp, 500, new ErrorResponse("Internal Server Error"));
         }
+    }
+
+
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        if ("PATCH".equalsIgnoreCase(req.getMethod())) {
+            doPatch(req, resp);
+        } else {
+            super.service(req, resp);
+        }
+    }
+
+    protected void doPatch(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
     }
 }

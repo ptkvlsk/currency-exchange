@@ -1,5 +1,6 @@
-package com.boo4er.currencyexchange.util;
+package com.boo4er.currencyexchange.config;
 
+import com.boo4er.currencyexchange.util.DatabaseUtil;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
