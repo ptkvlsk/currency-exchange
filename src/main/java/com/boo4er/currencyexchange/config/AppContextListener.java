@@ -17,10 +17,11 @@ public class AppContextListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        try (Connection conn = DatabaseUtil.getConnection()) {
+        try (Connection connection = DatabaseUtil.getConnection()) {
             log.info("База данных инициализирована при старте приложения");
         } catch (SQLException e) {
             log.error("Не удалось инициализировать БД", e);
+            throw new IllegalStateException("Не удалось подключиться к базе данных при запуске", e);
         }
     }
 
