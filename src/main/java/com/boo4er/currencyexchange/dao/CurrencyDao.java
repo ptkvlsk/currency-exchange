@@ -24,12 +24,7 @@ public class CurrencyDao {
              PreparedStatement preparedStatement = conn.prepareStatement(sql);
              ResultSet resultSet = preparedStatement.executeQuery()) {
             while (resultSet.next()) {
-                Currency currency = new Currency();
-                currency.setId(resultSet.getInt("id"));
-                currency.setCode(resultSet.getString("code"));
-                currency.setFullName(resultSet.getString("full_name"));
-                currency.setSign(resultSet.getString("sign"));
-                currencies.add(currency);
+                currencies.add(mapRow(resultSet));
             }
         } catch (SQLException e) {
             throw new DatabaseException("Ошибка при получении списка валют:", e);
@@ -47,12 +42,7 @@ public class CurrencyDao {
 
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
-                    Currency currency = new Currency();
-                    currency.setId(resultSet.getInt("id"));
-                    currency.setCode(resultSet.getString("code"));
-                    currency.setFullName(resultSet.getString("full_name"));
-                    currency.setSign(resultSet.getString("sign"));
-                    return currency;
+                    return mapRow(resultSet);
                 }
             }
         } catch (SQLException e) {
@@ -80,5 +70,14 @@ public class CurrencyDao {
             }
             throw new DatabaseException("Ошибка при сохранении валюты", e);
         }
+    }
+
+    private Currency mapRow(ResultSet resultSet) throws SQLException {
+        Currency currency = new Currency();
+        currency.setId(resultSet.getInt("id"));
+        currency.setCode(resultSet.getString("code"));
+        currency.setFullName(resultSet.getString("full_name"));
+        currency.setSign(resultSet.getString("sign"));
+        return currency;
     }
 }

@@ -34,28 +34,10 @@ public class ExchangeRateDao {
              PreparedStatement preparedStatement = conn.prepareStatement(sql);
              ResultSet resultSet = preparedStatement.executeQuery()) {
             while (resultSet.next()) {
-                Currency base = new Currency();
-                base.setId(resultSet.getInt("base_id"));
-                base.setCode(resultSet.getString("base_code"));
-                base.setFullName(resultSet.getString("base_full_name"));
-                base.setSign(resultSet.getString("base_sign"));
-
-                Currency target = new Currency();
-                target.setId(resultSet.getInt("target_id"));
-                target.setCode(resultSet.getString("target_code"));
-                target.setFullName(resultSet.getString("target_full_name"));
-                target.setSign(resultSet.getString("target_sign"));
-
-                ExchangeRate exchangeRate = new ExchangeRate();
-                exchangeRate.setId(resultSet.getInt("id"));
-                exchangeRate.setBaseCurrency(base);
-                exchangeRate.setTargetCurrency(target);
-                exchangeRate.setRate(resultSet.getBigDecimal("rate"));
-
-                rates.add(exchangeRate);
+                rates.add(mapRow(resultSet));
             }
         } catch (SQLException e) {
-            throw new DatabaseException("Ошибка при получении списка курсов:", e);
+            throw new DatabaseException("Ошибка при получении списка курсов", e);
         }
         return rates;
     }
@@ -64,8 +46,8 @@ public class ExchangeRateDao {
         String sql = """
                 SELECT
                 er.id, er.rate,
-                        bc.id AS base_id, bc.code AS base_code, bc.full_name AS base_full_name, bc.sign AS base_sign,
-                        tc.id AS target_id, tc.code AS target_code, tc.full_name AS target_full_name, tc.sign AS target_sign
+                bc.id AS base_id, bc.code AS base_code, bc.full_name AS base_full_name, bc.sign AS base_sign,
+                tc.id AS target_id, tc.code AS target_code, tc.full_name AS target_full_name, tc.sign AS target_sign
                 FROM exchange_rates er
                 JOIN currencies bc ON er.base_currency_id = bc.id
                 JOIN currencies tc ON er.target_currency_id = tc.id
@@ -79,27 +61,8 @@ public class ExchangeRateDao {
 
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
-                    Currency base = new Currency();
-                    base.setId(resultSet.getInt("base_id"));
-                    base.setCode(resultSet.getString("base_code"));
-                    base.setFullName(resultSet.getString("base_full_name"));
-                    base.setSign(resultSet.getString("base_sign"));
-
-                    Currency target = new Currency();
-                    target.setId(resultSet.getInt("target_id"));
-                    target.setCode(resultSet.getString("target_code"));
-                    target.setFullName(resultSet.getString("target_full_name"));
-                    target.setSign(resultSet.getString("target_sign"));
-
-                    ExchangeRate exchangeRate = new ExchangeRate();
-                    exchangeRate.setId(resultSet.getInt("id"));
-                    exchangeRate.setBaseCurrency(base);
-                    exchangeRate.setTargetCurrency(target);
-                    exchangeRate.setRate(resultSet.getBigDecimal("rate"));
-
-                    return exchangeRate;
+                    return mapRow(resultSet);
                 }
-
             }
 
         } catch (SQLException e) {
@@ -153,6 +116,24 @@ public class ExchangeRateDao {
             throw new DatabaseException("Ошибка при обновлении курса", e);
         }
         return findByPair(baseCode, targetCode);
+    }
+
+    private Currency mapCurrency(ResultSet resultSet, String prefix) throws SQLException {
+        Currency currency = new Currency();
+        currency.setId(resultSet.getInt(prefix + "id"));
+        currency.setCode(resultSet.getString(prefix + "code"));
+        currency.setFullName(resultSet.getString(prefix + "full_name"));
+        currency.setSign(resultSet.getString(prefix + "sign"));
+        return currency;
+    }
+
+    private ExchangeRate mapRow(ResultSet resultSet) throws SQLException {
+        ExchangeRate rate = new ExchangeRate();
+        rate.setId(resultSet.getInt("id"));
+        rate.setBaseCurrency(mapCurrency(resultSet, "base_"));
+        rate.setTargetCurrency(mapCurrency(resultSet, "target_"));
+        rate.setRate(resultSet.getBigDecimal("rate"));
+        return rate;
     }
 }
 
