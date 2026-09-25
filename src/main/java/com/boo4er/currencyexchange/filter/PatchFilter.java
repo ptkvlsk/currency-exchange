@@ -17,7 +17,10 @@ public class PatchFilter implements Filter {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
 
         if ("PATCH".equals(httpRequest.getMethod())) {
-            httpRequest = FormParserUtil.parseFormBody(httpRequest);
+            String contentType = httpRequest.getContentType();
+            if (contentType != null && contentType.startsWith("application/x-www-form-urlencoded")) {
+                httpRequest = FormParserUtil.parseFormBody(httpRequest);
+            }
         }
         chain.doFilter(httpRequest, response);
     }

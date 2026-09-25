@@ -14,7 +14,8 @@ import java.util.Map;
 public class FormParserUtil {
 
     public static HttpServletRequest parseFormBody(HttpServletRequest req) throws IOException {
-        if (!"application/x-www-form-urlencoded".equals(req.getContentType())) {
+        String contentType = req.getContentType();
+        if (contentType == null || !contentType.startsWith("application/x-www-form-urlencoded")) {
             return req;
         }
 
