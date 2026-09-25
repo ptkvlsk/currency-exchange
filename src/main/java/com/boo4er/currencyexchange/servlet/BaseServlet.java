@@ -18,16 +18,17 @@ public abstract class BaseServlet extends HttpServlet {
 
 
     protected void sendJson(HttpServletResponse resp, int statusCode, Object obj) throws IOException {
+        String json;
+        try {
+            json = JsonUtil.toJson(obj);
+        } catch (Exception e) {
+            throw new IOException("Ошибка при сериализации в JSON", e);
+        }
 
         resp.setStatus(statusCode);
         resp.setContentType("application/json");
         resp.setCharacterEncoding("UTF-8");
-        try {
-            String json = JsonUtil.toJson(obj);
-            resp.getWriter().write(json);
-        } catch (Exception e) {
-            throw new IOException("Ошибка при сериализации в JSON", e);
-        }
+        resp.getWriter().write(json);
     }
 
     protected void sendError(HttpServletResponse resp, AppException e) throws IOException {
