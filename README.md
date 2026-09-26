@@ -9,6 +9,17 @@ REST API для работы с валютами и обменными курс�
 REST API for currencies and exchange rates. Supports viewing, creating, and editing currencies and rates, as well as converting arbitrary amounts between currencies.
 
 ---
+## 🌐 Live Demo
+
+**Демо:** https://ptkvlsk.ru/
+
+Приложение развёрнуто на VPS (Aeza, Ubuntu 26.04) с Tomcat 10 и Nginx как reverse-proxy.
+
+- **Backend:** Java 17, Servlet API 6.0, SQLite
+- **Server:** Tomcat 10.1.59
+- **Reverse proxy:** Nginx
+- **HTTPS:** Cloudflare (Flexible SSL)
+- ---
 
 ## 🛠 Стек технологий / Tech Stack
 
