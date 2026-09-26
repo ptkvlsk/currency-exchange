@@ -51,9 +51,8 @@ public class ExchangeRateServlet extends BaseServlet {
             String[] pair = extractPair(req);
 
             String rateStr = req.getParameter("rate");
-            if (rateStr == null || rateStr.isEmpty()) {
-                throw new ValidationException("Отсутствует поле rate");
-            }
+
+            requireNonBlank(rateStr, "rate");
 
             BigDecimal rate;
             try {
@@ -68,5 +67,4 @@ public class ExchangeRateServlet extends BaseServlet {
             handleException(resp, e);
         }
     }
-
 }

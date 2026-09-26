@@ -43,15 +43,9 @@ public class ExchangeRatesServlet extends BaseServlet {
             String targetCode = req.getParameter("targetCurrencyCode");
             String rateStr = req.getParameter("rate");
 
-            if (baseCode == null || baseCode.isEmpty()) {
-                throw new ValidationException("Отсутствует поле baseCurrencyCode");
-            }
-            if (targetCode == null || targetCode.isEmpty()) {
-                throw new ValidationException("Отсутствует поле targetCurrencyCode");
-            }
-            if (rateStr == null || rateStr.isEmpty()) {
-                throw new ValidationException("Отсутствует поле rate");
-            }
+            requireNonBlank(baseCode, "baseCurrencyCode");
+            requireNonBlank(targetCode, "targetCurrencyCode");
+            requireNonBlank(rateStr, "rate");
 
             BigDecimal rate;
             try {

@@ -2,6 +2,7 @@ package com.boo4er.currencyexchange.servlet;
 
 import com.boo4er.currencyexchange.dto.ErrorResponse;
 import com.boo4er.currencyexchange.exception.AppException;
+import com.boo4er.currencyexchange.exception.ValidationException;
 import com.boo4er.currencyexchange.util.JsonUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -57,5 +58,11 @@ public abstract class BaseServlet extends HttpServlet {
 
     protected void doPatch(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+    }
+
+    protected void requireNonBlank(String value, String field) throws ValidationException {
+        if (value == null || value.isBlank()) {
+            throw new ValidationException("Отсутствует поле " + field);
+        }
     }
 }

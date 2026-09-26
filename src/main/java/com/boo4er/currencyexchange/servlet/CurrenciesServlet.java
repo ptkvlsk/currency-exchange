@@ -2,7 +2,6 @@ package com.boo4er.currencyexchange.servlet;
 
 import com.boo4er.currencyexchange.dao.CurrencyDao;
 import com.boo4er.currencyexchange.exception.AppException;
-import com.boo4er.currencyexchange.exception.ValidationException;
 import com.boo4er.currencyexchange.model.Currency;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -37,15 +36,9 @@ public class CurrenciesServlet extends BaseServlet {
             String code = req.getParameter("code");
             String sign = req.getParameter("sign");
 
-            if (name == null || name.isEmpty()) {
-                throw new ValidationException("Отсутствует поле name");
-            }
-            if (code == null || code.isEmpty()) {
-                throw new ValidationException("Отсутствует поле code");
-            }
-            if (sign == null || sign.isEmpty()) {
-                throw new ValidationException("Отсутствует поле sign");
-            }
+            requireNonBlank(name, "name");
+            requireNonBlank(code, "code");
+            requireNonBlank(sign, "sign");
 
             Currency currency = new Currency();
             currency.setCode(code);

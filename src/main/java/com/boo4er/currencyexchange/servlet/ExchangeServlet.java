@@ -31,15 +31,9 @@ public class ExchangeServlet extends BaseServlet {
             String to = req.getParameter("to");
             String amountStr = req.getParameter("amount");
 
-            if (from == null || from.isEmpty()) {
-                throw new ValidationException("Отсутствует параметр from");
-            }
-            if (to == null || to.isEmpty()) {
-                throw new ValidationException("Отсутствует параметр to");
-            }
-            if (amountStr == null || amountStr.isEmpty()) {
-                throw new ValidationException("Отсутствует параметр amount");
-            }
+            requireNonBlank(from, "from");
+            requireNonBlank(to, "to");
+            requireNonBlank(amountStr, "amount");
 
             BigDecimal amount;
             try {
