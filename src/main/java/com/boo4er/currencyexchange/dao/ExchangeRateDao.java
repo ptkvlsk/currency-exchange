@@ -6,6 +6,7 @@ import com.boo4er.currencyexchange.exception.DatabaseException;
 import com.boo4er.currencyexchange.exception.NotFoundException;
 import com.boo4er.currencyexchange.model.Currency;
 import com.boo4er.currencyexchange.model.ExchangeRate;
+import com.boo4er.currencyexchange.util.CurrencyCodeUtil;
 import com.boo4er.currencyexchange.util.DatabaseUtil;
 
 import java.math.BigDecimal;
@@ -56,8 +57,8 @@ public class ExchangeRateDao {
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
 
-            preparedStatement.setString(1, baseCode);
-            preparedStatement.setString(2, targetCode);
+            preparedStatement.setString(1, CurrencyCodeUtil.normalize(baseCode));
+            preparedStatement.setString(2, CurrencyCodeUtil.normalize(targetCode));
 
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
@@ -68,7 +69,8 @@ public class ExchangeRateDao {
         } catch (SQLException e) {
             throw new DatabaseException("Ошибка при поиске курса", e);
         }
-        throw new NotFoundException("Курс для пары " + baseCode + " " + targetCode + " не найден");
+        throw new NotFoundException("Курс для пары " + CurrencyCodeUtil.normalize(baseCode)
+                + " " + CurrencyCodeUtil.normalize(targetCode) + " не найден");
     }
 
     public ExchangeRate save(ExchangeRate exchangeRate) throws AppException {
@@ -97,7 +99,7 @@ public class ExchangeRateDao {
 
         String sql = """
                 UPDATE exchange_rates SET rate = ?
-                WHERE base_currency_id = ( SELECT id FROM currencies WHERE code =?)
+                WHERE base_currency_id = ( SELECT id FROM currencies WHERE code = ?)
                 AND target_currency_id = ( SELECT id FROM currencies WHERE code = ?)
                 """;
 
@@ -105,12 +107,13 @@ public class ExchangeRateDao {
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
 
             preparedStatement.setBigDecimal(1, newRate);
-            preparedStatement.setString(2, baseCode);
-            preparedStatement.setString(3, targetCode);
+            preparedStatement.setString(2, CurrencyCodeUtil.normalize(baseCode));
+            preparedStatement.setString(3, CurrencyCodeUtil.normalize(targetCode));
 
             int rows = preparedStatement.executeUpdate();
             if (rows == 0) {
-                throw new NotFoundException("Курс для пары " + baseCode + " " + targetCode + " не найден");
+                throw new NotFoundException("Курс для пары " + CurrencyCodeUtil.normalize(baseCode)
+                        + " " + CurrencyCodeUtil.normalize(targetCode) + " не найден");
             }
         } catch (SQLException e) {
             throw new DatabaseException("Ошибка при обновлении курса", e);

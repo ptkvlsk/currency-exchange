@@ -5,6 +5,7 @@ import com.boo4er.currencyexchange.exception.ConflictException;
 import com.boo4er.currencyexchange.exception.DatabaseException;
 import com.boo4er.currencyexchange.exception.NotFoundException;
 import com.boo4er.currencyexchange.model.Currency;
+import com.boo4er.currencyexchange.util.CurrencyCodeUtil;
 import com.boo4er.currencyexchange.util.DatabaseUtil;
 
 import java.sql.Connection;
@@ -27,7 +28,7 @@ public class CurrencyDao {
                 currencies.add(mapRow(resultSet));
             }
         } catch (SQLException e) {
-            throw new DatabaseException("Ошибка при получении списка валют:", e);
+            throw new DatabaseException("Ошибка при получении списка валют", e);
         }
         return currencies;
     }
@@ -38,7 +39,7 @@ public class CurrencyDao {
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
 
-            preparedStatement.setString(1, code);
+            preparedStatement.setString(1, CurrencyCodeUtil.normalize(code));
 
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
@@ -46,7 +47,7 @@ public class CurrencyDao {
                 }
             }
         } catch (SQLException e) {
-            throw new DatabaseException("Ошибка при поиске валюты: ", e);
+            throw new DatabaseException("Ошибка при поиске валюты", e);
         }
         throw new NotFoundException("Валюта с кодом " + code + " не найдена");
     }
@@ -56,7 +57,7 @@ public class CurrencyDao {
 
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setString(1, currency.getCode());
+            preparedStatement.setString(1, CurrencyCodeUtil.normalize(currency.getCode()));
             preparedStatement.setString(2, currency.getFullName());
             preparedStatement.setString(3, currency.getSign());
 
@@ -66,7 +67,8 @@ public class CurrencyDao {
 
         } catch (SQLException e) {
             if (e.getMessage() != null && e.getMessage().contains("UNIQUE constraint")) {
-                throw new ConflictException("Валюта с кодом " + currency.getCode() + " уже существует");
+                throw new ConflictException("Валюта с кодом "
+                        + CurrencyCodeUtil.normalize(currency.getCode()) + " уже существует");
             }
             throw new DatabaseException("Ошибка при сохранении валюты", e);
         }
