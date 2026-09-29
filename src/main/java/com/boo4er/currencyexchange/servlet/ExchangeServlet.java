@@ -45,8 +45,7 @@ public class ExchangeServlet extends BaseServlet {
             ExchangeRate rate = findRateForExchange(from, to);
             BigDecimal convertedAmount = amount.multiply(rate.getRate()).setScale(2, RoundingMode.HALF_UP);
 
-            ExchangeResponse response = new ExchangeResponse(
-                    rate.getBaseCurrency(), rate.getTargetCurrency(), rate.getRate(), amount, convertedAmount);
+            ExchangeResponse response = new ExchangeResponse(rate, amount, convertedAmount);
 
             sendJson(resp, SC_OK, response);
 

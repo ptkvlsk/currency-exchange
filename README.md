@@ -1,60 +1,58 @@
 # Currency Exchange API
 
-REST API для работы с валютами и обменными курсами. Позволяет просматривать, создавать и редактировать валюты и курсы, а также конвертировать произвольные суммы из одной валюты в другую.
+> REST API для работы с валютами и обменными курсами. Позволяет просматривать, создавать и редактировать валюты и курсы, а также конвертировать произвольные суммы из одной валюты в другую.
+>
+> REST API for currencies and exchange rates. Supports viewing, creating, and editing currencies and rates, as well as converting arbitrary amounts between currencies.
+
+[![Java](https://img.shields.io/badge/Java-17-orange)](https://openjdk.org/projects/jdk/17/)
+[![Servlet API](https://img.shields.io/badge/Servlet_API-6.0-blue)](https://jakarta.ee/specifications/servlet/6.0/)
+[![SQLite](https://img.shields.io/badge/SQLite-3-003B57)](https://www.sqlite.org/)
+[![Tomcat](https://img.shields.io/badge/Tomcat-10.1-yellow)](https://tomcat.apache.org/)
+[![Tests](https://img.shields.io/badge/Tests-98%2F98-success)](#-тестирование--testing)
+[![License](https://img.shields.io/badge/License-Educational-lightgrey)](#-лицензия--license)
 
 ---
 
-# Currency Exchange API (EN)
-
-REST API for currencies and exchange rates. Supports viewing, creating, and editing currencies and rates, as well as converting arbitrary amounts between currencies.
-
----
 ## 🌐 Live Demo
 
-**Демо:** https://ptkvlsk.ru/
+**🔗 [http://77.221.142.17/](http://77.221.142.17/)**
 
-Приложение развёрнуто на VPS (Aeza, Ubuntu 26.04) с Tomcat 10 и Nginx как reverse-proxy.
+Развёрнуто на VPS (Aeza, Ubuntu 26.04) под управлением Tomcat 10 + Nginx (reverse-proxy).
 
-- **Backend:** Java 17, Servlet API 6.0, SQLite
-- **Server:** Tomcat 10.1.59
-- **Reverse proxy:** Nginx
-- **HTTPS:** Cloudflare (Flexible SSL)
-- ---
+Deployed on VPS (Aeza, Ubuntu 26.04) with Tomcat 10 + Nginx (reverse-proxy).
+
+---
 
 ## 🛠 Стек технологий / Tech Stack
 
-- **Java 17**
-- **Jakarta Servlet API 6.0** — без фреймворков / no frameworks
-- **SQLite** — встроенная БД / embedded database
-- **JDBC** — работа с БД / database access
-- **Jackson** — сериализация JSON / JSON serialization
-- **SLF4J + Logback** — логирование / logging
-- **Maven** — сборка / build tool
-- **Apache Tomcat 10** — сервер приложений / application server
+| Компонент | Технология |
+|-----------|------------|
+| **Язык / Language** | Java 17 |
+| **Web / HTTP** | Jakarta Servlet API 6.0 (без фреймворков) |
+| **База данных / Database** | SQLite + JDBC |
+| **JSON** | Jackson Databind |
+| **Логирование / Logging** | SLF4J + Logback |
+| **Сборка / Build** | Maven (WAR) |
+| **Сервер / Server** | Apache Tomcat 10.1 |
+| **Reverse Proxy** | Nginx |
 
 ---
 
 ## ✨ Функционал / Features
 
-**🇷🇺**
-- Просмотр списка валют и отдельных валют по коду
-- Добавление новых валют
-- Просмотр списка обменных курсов и курсов по валютной паре
-- Создание и обновление обменных курсов
-- Конвертация суммы из одной валюты в другую по трём сценариям:
-    - прямой курс
-    - обратный курс
-    - кросс-курс через USD
+**Валюты / Currencies**
+- Просмотр списка валют и отдельных валют по коду · List all currencies and get a single currency by code
+- Добавление новых валют · Add new currencies
 
-**🇬🇧**
-- List all currencies and get a single currency by code
-- Add new currencies
-- List all exchange rates and get a rate by currency pair
-- Create and update exchange rates
-- Convert amounts between currencies using three scenarios:
-    - direct rate
-    - reverse rate
-    - cross-rate via USD
+**Курсы / Exchange Rates**
+- Просмотр списка обменных курсов и курсов по валютной паре · List all exchange rates and get a rate by currency pair
+- Создание и обновление обменных курсов · Create and update exchange rates
+
+**Конвертация / Conversion**
+- Перевод суммы из одной валюты в другую по трём сценариям · Convert amounts between currencies using three scenarios:
+    - прямой курс · direct rate
+    - обратный курс · reverse rate
+    - кросс-курс через USD · cross-rate via USD
 
 ---
 
@@ -70,14 +68,47 @@ REST API for currencies and exchange rates. Supports viewing, creating, and edit
 | `POST` | `/exchangeRates` | Создать курс / Create rate |
 | `PATCH` | `/exchangeRate/{pair}` | Обновить курс / Update rate |
 | `GET` | `/exchange?from=X&to=Y&amount=Z` | Конвертация / Convert |
+| `GET` | `/health` | Проверка доступности / Health check |
 
-### Примеры ошибок / Error Examples
-
+**Формат ошибок / Error format:**
 ```json
 { "message": "Валюта не найдена" }
 ```
 
 **HTTP-коды:** `200`, `201`, `400`, `404`, `409`, `500`
+
+### Пример / Example
+
+```bash
+# Список валют
+curl http://77.221.142.17/currencies
+
+# Конвертация
+curl "http://77.221.142.17/exchange?from=USD&to=RUB&amount=100"
+```
+
+```json
+{
+    "baseCurrency": { "id": 1, "name": "United States dollar", "code": "USD", "sign": "$" },
+    "targetCurrency": { "id": 3, "name": "Russian Ruble", "code": "RUB", "sign": "₽" },
+    "rate": 90.5,
+    "amount": 100,
+    "convertedAmount": 9050.00
+}
+```
+
+---
+
+## ✅ Тестирование / Testing
+
+API прошёл **автоматическое тестирование** ботом — **98/98 кейсов пройдено**:
+
+- ✅ Все CRUD-операции для валют и курсов
+- ✅ Все три сценария конвертации (прямой, обратный, кросс-курс через USD)
+- ✅ Валидация входных данных (пустые поля, некорректные значения, длина `sign`)
+- ✅ Обработка ошибок (400, 404, 409)
+- ✅ Корректная структура JSON-ответов
+- ✅ Правильные HTTP-коды и `Content-Type`
 
 ---
 
@@ -97,7 +128,7 @@ src/main/java/com/boo4er/currencyexchange/
 
 ---
 
-## 🚀 Как запустить локально / How to Run Locally
+## 🚀 Запуск локально / How to Run Locally
 
 ### Требования / Requirements
 
@@ -107,7 +138,7 @@ src/main/java/com/boo4er/currencyexchange/
 
 ### Шаги / Steps
 
-**1. Клонировать репозиторий / Clone**
+**1. Клонировать / Clone**
 ```bash
 git clone https://github.com/ptkvlsk/currency-exchange.git
 cd currency-exchange
@@ -121,10 +152,9 @@ mvn clean package
 **3. Развернуть в Tomcat / Deploy to Tomcat**
 
 Скопируйте `target/currency-exchange.war` в `<tomcat>/webapps/` и запустите Tomcat.
-
 Copy `target/currency-exchange.war` to `<tomcat>/webapps/` and start Tomcat.
 
-**4. Открыть в браузере / Open in browser**
+**4. Открыть / Open**
 ```
 http://localhost:8080/currency-exchange/
 ```
@@ -138,21 +168,17 @@ The SQLite database is created automatically on first launch.
 
 ![Frontend](docs/screenshots/frontend.png)
 
-> **Note:** Для визуального тестирования API подключён тестовый фронтенд от [Сергея Жукова](https://github.com/zhukovsd/currency-exchange-frontend).
-> Backend полностью написан мной.
+> **Note:** Для визуального тестирования API подключён тестовый фронтенд от [Сергея Жукова](https://github.com/zhukovsd/currency-exchange-frontend). Backend полностью написан мной.
 >
-> **Note (EN):** The test frontend from [Sergey Zhukov](https://github.com/zhukovsd/currency-exchange-frontend) is used for API visual testing. The backend is fully my own work.
+> The test frontend from [Sergey Zhukov](https://github.com/zhukovsd/currency-exchange-frontend) is used for API visual testing. The backend is fully my own work.
 
 ---
 
 ## 👤 Автор / Author
 
-**ptkvlsk**
-
-- GitHub: [@ptkvlsk](https://github.com/ptkvlsk)
+**ptkvlsk** — [@ptkvlsk](https://github.com/ptkvlsk)
 
 Учебный проект в рамках курса [«Java Backend Learning Course»](https://zhukovsd.github.io/java-backend-learning-course/) Сергея Жукова.
-
 Educational project based on [Sergey Zhukov's Java Backend Learning Course](https://zhukovsd.github.io/java-backend-learning-course/).
 
 ---
