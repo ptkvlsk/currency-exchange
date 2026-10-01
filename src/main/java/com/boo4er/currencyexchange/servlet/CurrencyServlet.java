@@ -1,6 +1,7 @@
 package com.boo4er.currencyexchange.servlet;
 
 import com.boo4er.currencyexchange.dao.CurrencyDao;
+import com.boo4er.currencyexchange.dto.CurrencyResponse;
 import com.boo4er.currencyexchange.exception.AppException;
 import com.boo4er.currencyexchange.exception.ValidationException;
 import com.boo4er.currencyexchange.model.Currency;
@@ -30,7 +31,7 @@ public class CurrencyServlet extends BaseServlet {
             String code = pathInfo.substring(1);
 
             Currency currency = currencyDao.findByCode(code);
-            sendJson(resp, SC_OK, currency);
+            sendJson(resp, SC_OK, new CurrencyResponse(currency));
         } catch (AppException e) {
             handleException(resp, e);
         }

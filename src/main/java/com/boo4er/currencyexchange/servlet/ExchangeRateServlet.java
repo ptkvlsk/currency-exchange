@@ -1,6 +1,7 @@
 package com.boo4er.currencyexchange.servlet;
 
 import com.boo4er.currencyexchange.dao.ExchangeRateDao;
+import com.boo4er.currencyexchange.dto.ExchangeRateResponse;
 import com.boo4er.currencyexchange.exception.AppException;
 import com.boo4er.currencyexchange.exception.ValidationException;
 import com.boo4er.currencyexchange.model.ExchangeRate;
@@ -39,7 +40,7 @@ public class ExchangeRateServlet extends BaseServlet {
         try {
             String[] pair = extractPair(req);
             ExchangeRate rate = exchangeRateDao.findByPair(pair[0], pair[1]);
-            sendJson(resp, SC_OK, rate);
+            sendJson(resp, SC_OK, new ExchangeRateResponse(rate));
         } catch (AppException e) {
             handleException(resp, e);
         }
@@ -62,7 +63,7 @@ public class ExchangeRateServlet extends BaseServlet {
             }
 
             ExchangeRate updated = exchangeRateDao.update(pair[0], pair[1], rate);
-            sendJson(resp, SC_OK, updated);
+            sendJson(resp, SC_OK, new ExchangeRateResponse(updated));
         } catch (AppException e) {
             handleException(resp, e);
         }
