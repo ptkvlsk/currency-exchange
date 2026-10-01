@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import static jakarta.servlet.http.HttpServletResponse.SC_CREATED;
@@ -25,7 +26,10 @@ public class CurrenciesServlet extends BaseServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
             List<Currency> currencies = currencyDao.findAll();
-            List<CurrencyResponse> responses = currencies.stream().map(CurrencyResponse::new).toList();
+            List<CurrencyResponse> responses = new ArrayList<>();
+            for (Currency currency : currencies) {
+                responses.add(new CurrencyResponse(currency));
+            }
             sendJson(resp, SC_OK, responses);
         } catch (AppException e) {
             handleException(resp, e);

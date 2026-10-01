@@ -9,7 +9,6 @@ public class CurrencyResponse {
     private String code;
     private String sign;
 
-
     public CurrencyResponse() {
     }
 
