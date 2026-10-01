@@ -151,12 +151,35 @@ mvn clean package
 
 **3. Развернуть в Tomcat / Deploy to Tomcat**
 
-Скопируйте `target/currency-exchange.war` в `<tomcat>/webapps/` и запустите Tomcat.
-Copy `target/currency-exchange.war` to `<tomcat>/webapps/` and start Tomcat.
+Скопируйте WAR в папку `webapps` вашего Tomcat:
+Copy the WAR to your Tomcat's `webapps` folder:
+
+```bash
+cp target/currency-exchange.war $CATALINA_HOME/webapps/
+```
+
+Где `$CATALINA_HOME` — путь к установленному Tomcat (например, `/opt/tomcat`).
+Where `$CATALINA_HOME` is the path to your Tomcat installation (e.g. `/opt/tomcat`).
+
+Запустите Tomcat:
+Start Tomcat:
+
+```bash
+$CATALINA_HOME/bin/startup.sh
+```
 
 **4. Открыть / Open**
+
+При запуске через standalone Tomcat:
+When running via standalone Tomcat:
 ```
 http://localhost:8080/currency-exchange/
+```
+
+При запуске через IntelliJ IDEA (Smart Tomcat):
+When running via IntelliJ IDEA (Smart Tomcat):
+```
+http://localhost:8080/
 ```
 
 База данных SQLite создастся автоматически при первом запуске.
