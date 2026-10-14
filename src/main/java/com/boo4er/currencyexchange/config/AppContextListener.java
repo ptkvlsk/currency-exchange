@@ -1,5 +1,6 @@
 package com.boo4er.currencyexchange.config;
 
+import com.boo4er.currencyexchange.exception.DatabaseException;
 import com.boo4er.currencyexchange.util.DatabaseUtil;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
@@ -19,7 +20,7 @@ public class AppContextListener implements ServletContextListener {
     public void contextInitialized(ServletContextEvent sce) {
         try (Connection connection = DatabaseUtil.getConnection()) {
             log.info("База данных инициализирована при старте приложения");
-        } catch (SQLException e) {
+        } catch (SQLException | DatabaseException e) {
             log.error("Не удалось инициализировать БД", e);
             throw new IllegalStateException("Не удалось подключиться к базе данных при запуске", e);
         }

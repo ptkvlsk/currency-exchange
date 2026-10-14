@@ -1,12 +1,10 @@
 package com.boo4er.currencyexchange.util;
 
+import com.boo4er.currencyexchange.exception.DatabaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -52,8 +50,7 @@ public class DatabaseUtil {
         InputStream inputStream = DatabaseUtil.class.getClassLoader().getResourceAsStream(INIT_SCRIPT_PATH);
 
         if (inputStream == null) {
-            log.error("Файл init.sql не найден в ресурсах");
-            return;
+            throw new DatabaseException("Файл " + INIT_SCRIPT_PATH + "не найдне в ресурсах");
         }
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
@@ -78,9 +75,11 @@ public class DatabaseUtil {
                 log.info("База данных успешно инициализирована");
             } catch (SQLException e) {
                 log.error("Ошибка при инициализации базы данных", e);
+                throw new DatabaseException("Не удалось инициализировать базу данных", e);
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             log.error("Ошибка при чтении файла init.sql", e);
+            throw new DatabaseException("Не удалось прочитать фаил init.sql", e);
         }
     }
 
