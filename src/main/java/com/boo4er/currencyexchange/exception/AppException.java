@@ -1,6 +1,6 @@
 package com.boo4er.currencyexchange.exception;
 
-public class AppException extends Exception {
+public class AppException extends RuntimeException {
     private final int statusCode;
 
     public AppException(String message, int statusCode) {

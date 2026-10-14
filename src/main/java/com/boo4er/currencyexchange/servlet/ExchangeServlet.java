@@ -54,7 +54,7 @@ public class ExchangeServlet extends BaseServlet {
         }
     }
 
-    private ExchangeRate findRateForExchange(String from, String to) throws AppException {
+    private ExchangeRate findRateForExchange(String from, String to)  {
         try {
             return exchangeRateDao.findByPair(from, to);
         } catch (NotFoundException e) {

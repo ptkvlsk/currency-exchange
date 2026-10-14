@@ -1,6 +1,5 @@
 package com.boo4er.currencyexchange.dao;
 
-import com.boo4er.currencyexchange.exception.AppException;
 import com.boo4er.currencyexchange.exception.ConflictException;
 import com.boo4er.currencyexchange.exception.DatabaseException;
 import com.boo4er.currencyexchange.exception.NotFoundException;
@@ -17,7 +16,7 @@ import java.util.List;
 
 public class CurrencyDao {
 
-    public List<Currency> findAll() throws AppException {
+    public List<Currency> findAll()  {
         List<Currency> currencies = new ArrayList<>();
         String sql = "SELECT id, code, full_name, sign FROM currencies";
 
@@ -33,7 +32,7 @@ public class CurrencyDao {
         return currencies;
     }
 
-    public Currency findByCode(String code) throws AppException {
+    public Currency findByCode(String code)  {
         String sql = "SELECT id, code, full_name, sign FROM currencies WHERE code = ?";
 
         try (Connection conn = DatabaseUtil.getConnection();
@@ -52,7 +51,7 @@ public class CurrencyDao {
         throw new NotFoundException("Валюта с кодом " + code + " не найдена");
     }
 
-    public Currency save(Currency currency) throws AppException {
+    public Currency save(Currency currency)  {
         String sql = "INSERT INTO currencies (code, full_name, sign) VALUES (?, ?, ?)";
 
         try (Connection conn = DatabaseUtil.getConnection();

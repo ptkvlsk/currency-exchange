@@ -1,6 +1,5 @@
 package com.boo4er.currencyexchange.dao;
 
-import com.boo4er.currencyexchange.exception.AppException;
 import com.boo4er.currencyexchange.exception.ConflictException;
 import com.boo4er.currencyexchange.exception.DatabaseException;
 import com.boo4er.currencyexchange.exception.NotFoundException;
@@ -18,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ExchangeRateDao {
-    public List<ExchangeRate> findAll() throws AppException {
+    public List<ExchangeRate> findAll() {
         List<ExchangeRate> rates = new ArrayList<>();
 
         String sql = """
@@ -43,7 +42,7 @@ public class ExchangeRateDao {
         return rates;
     }
 
-    public ExchangeRate findByPair(String baseCode, String targetCode) throws AppException {
+    public ExchangeRate findByPair(String baseCode, String targetCode) {
         String sql = """
                 SELECT
                 er.id, er.rate,
@@ -73,7 +72,7 @@ public class ExchangeRateDao {
                 + " " + CurrencyCodeUtil.normalize(targetCode) + " не найден");
     }
 
-    public ExchangeRate save(ExchangeRate exchangeRate) throws AppException {
+    public ExchangeRate save(ExchangeRate exchangeRate) {
         String sql = "INSERT INTO exchange_rates (base_currency_id, target_currency_id, rate) VALUES (?, ?, ?)";
 
         try (Connection conn = DatabaseUtil.getConnection();
@@ -95,7 +94,7 @@ public class ExchangeRateDao {
         }
     }
 
-    public ExchangeRate update(String baseCode, String targetCode, BigDecimal newRate) throws AppException {
+    public ExchangeRate update(String baseCode, String targetCode, BigDecimal newRate) {
 
         String sql = """
                 UPDATE exchange_rates SET rate = ?
