@@ -48,7 +48,7 @@ public class DatabaseUtil {
         InputStream inputStream = DatabaseUtil.class.getClassLoader().getResourceAsStream(INIT_SCRIPT_PATH);
 
         if (inputStream == null) {
-            throw new DatabaseException("Файл " + INIT_SCRIPT_PATH + "не найдне в ресурсах");
+            throw new DatabaseException("Файл " + INIT_SCRIPT_PATH + "не найден в ресурсах");
         }
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
@@ -77,7 +77,7 @@ public class DatabaseUtil {
             }
         } catch (IOException e) {
             log.error("Ошибка при чтении файла init.sql", e);
-            throw new DatabaseException("Не удалось прочитать фаил init.sql", e);
+            throw new DatabaseException("Не удалось прочитать файл init.sql", e);
         }
     }
 
