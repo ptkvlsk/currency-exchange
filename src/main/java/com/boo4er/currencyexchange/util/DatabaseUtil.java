@@ -40,9 +40,7 @@ public class DatabaseUtil {
         if (parentDir != null && !parentDir.exists()) {
             parentDir.mkdirs();
         }
-        if (!dbFile.exists()) {
-            executeInitScript();
-        }
+        executeInitScript();
         isInitialized = true;
     }
 
