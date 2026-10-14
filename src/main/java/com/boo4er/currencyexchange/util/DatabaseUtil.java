@@ -84,13 +84,4 @@ public class DatabaseUtil {
         }
     }
 
-    public static void closeConnection(Connection connection) {
-        if (connection != null) {
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                log.error("Ошибка при закрытии соединения", e);
-            }
-        }
-    }
 }
