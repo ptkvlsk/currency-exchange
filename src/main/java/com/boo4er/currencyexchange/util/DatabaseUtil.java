@@ -10,11 +10,11 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Properties;
 
 public class DatabaseUtil {
 
-    private static final String DB_PATH = "data/currency.db";
-    private static final String DB_URL = "jdbc:sqlite:" + DB_PATH;
+    private static String dbUrl;
     private static final String INIT_SCRIPT_PATH = "db/init.sql";
     private static boolean isInitialized = false;
     private static final Logger log = LoggerFactory.getLogger(DatabaseUtil.class);
@@ -31,12 +31,13 @@ public class DatabaseUtil {
         if (!isInitialized) {
             initializeDatabase();
         }
-        return DriverManager.getConnection(DB_URL);
+        return DriverManager.getConnection(dbUrl);
     }
 
     private static void initializeDatabase() {
-        File dbFile = new File(DB_PATH);
-        File parentDir = dbFile.getParentFile();
+        String dbPath = resolveDbPath();
+        dbUrl = "jdbc:sqlite:" + dbPath;
+        File parentDir = new File(dbPath).getParentFile();
         if (parentDir != null && !parentDir.exists()) {
             parentDir.mkdirs();
         }
@@ -48,7 +49,7 @@ public class DatabaseUtil {
         InputStream inputStream = DatabaseUtil.class.getClassLoader().getResourceAsStream(INIT_SCRIPT_PATH);
 
         if (inputStream == null) {
-            throw new DatabaseException("Файл " + INIT_SCRIPT_PATH + "не найден в ресурсах");
+            throw new DatabaseException("Файл " + INIT_SCRIPT_PATH + " не найден в ресурсах");
         }
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
@@ -62,7 +63,7 @@ public class DatabaseUtil {
 
             String[] queries = sql.toString().split(";");
 
-            try (Connection connection = DriverManager.getConnection(DB_URL);
+            try (Connection connection = DriverManager.getConnection(dbUrl);
                  Statement statement = connection.createStatement()) {
                 for (String query : queries) {
                     String trimmed = query.trim();
@@ -81,4 +82,28 @@ public class DatabaseUtil {
         }
     }
 
+    private static Properties loadProperties() {
+        try (InputStream in = DatabaseUtil.class.getClassLoader().getResourceAsStream("db.properties")) {
+            if (in == null) {
+                throw new DatabaseException("Файл db.properties не найден в ресурсах");
+            }
+            Properties properties = new Properties();
+            properties.load(in);
+            return properties;
+        } catch (IOException e) {
+            throw new DatabaseException("Не удалось прочитать файл db.properties", e);
+        }
+    }
+
+    private static String resolveDbPath() {
+        String fromEnv = System.getenv("DB_PATH");
+        if (fromEnv != null && !fromEnv.isBlank()) {
+            return fromEnv.trim();
+        }
+        String fromFile = loadProperties().getProperty("db.path");
+        if (fromFile == null || fromFile.isBlank()) {
+            throw new DatabaseException("В db.properties не задан параметр db.path");
+        }
+        return fromFile.trim();
+    }
 }
