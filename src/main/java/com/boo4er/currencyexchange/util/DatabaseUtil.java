@@ -55,6 +55,14 @@ public class DatabaseUtil {
         }
     }
 
+    public static synchronized void close() {
+        if (dataSource != null) {
+            dataSource.close();
+            dataSource = null;
+            log.info("Пул соединений закрыт");
+        }
+    }
+
     private static void executeInitScript() {
         InputStream inputStream = DatabaseUtil.class.getClassLoader().getResourceAsStream(INIT_SCRIPT_PATH);
 
