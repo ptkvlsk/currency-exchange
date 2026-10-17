@@ -17,21 +17,34 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ExchangeRateDao {
+
+    private static final String SELECT_SQL = """
+        SELECT
+            er.id, er.rate,
+            bc.id AS base_id, bc.code AS base_code, bc.full_name AS base_full_name, bc.sign AS base_sign,
+            tc.id AS target_id, tc.code AS target_code, tc.full_name AS target_full_name, tc.sign AS target_sign
+        FROM exchange_rates er
+        JOIN currencies bc ON er.base_currency_id = bc.id
+        JOIN currencies tc ON er.target_currency_id = tc.id
+        """;
+
+    private static final String SELECT_BY_PAIR_SQL =
+            SELECT_SQL + "WHERE bc.code = ? AND tc.code = ?";
+
+    private static final String INSERT_SQL =
+            "INSERT INTO exchange_rates (base_currency_id, target_currency_id, rate) VALUES (?, ?, ?)";
+
+    private static final String UPDATE_SQL = """
+        UPDATE exchange_rates SET rate = ?
+        WHERE base_currency_id = (SELECT id FROM currencies WHERE code = ?)
+          AND target_currency_id = (SELECT id FROM currencies WHERE code = ?)
+        """;
+
     public List<ExchangeRate> findAll() {
         List<ExchangeRate> rates = new ArrayList<>();
 
-        String sql = """
-                SELECT
-                    er.id, er.rate,
-                    bc.id AS base_id, bc.code AS base_code, bc.full_name AS base_full_name, bc.sign AS base_sign,
-                    tc.id AS target_id, tc.code AS target_code, tc.full_name AS target_full_name, tc.sign AS target_sign
-                FROM exchange_rates er
-                JOIN currencies bc ON er.base_currency_id = bc.id
-                JOIN currencies tc ON er.target_currency_id = tc.id
-                """;
-
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql);
+             PreparedStatement preparedStatement = conn.prepareStatement(SELECT_SQL);
              ResultSet resultSet = preparedStatement.executeQuery()) {
             while (resultSet.next()) {
                 rates.add(mapRow(resultSet));
@@ -43,18 +56,9 @@ public class ExchangeRateDao {
     }
 
     public ExchangeRate findByPair(String baseCode, String targetCode) {
-        String sql = """
-                SELECT
-                er.id, er.rate,
-                bc.id AS base_id, bc.code AS base_code, bc.full_name AS base_full_name, bc.sign AS base_sign,
-                tc.id AS target_id, tc.code AS target_code, tc.full_name AS target_full_name, tc.sign AS target_sign
-                FROM exchange_rates er
-                JOIN currencies bc ON er.base_currency_id = bc.id
-                JOIN currencies tc ON er.target_currency_id = tc.id
-                WHERE bc.code = ? AND tc.code = ?
-                """;
+
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+             PreparedStatement preparedStatement = conn.prepareStatement(SELECT_BY_PAIR_SQL)) {
 
             preparedStatement.setString(1, CurrencyCodeUtil.normalize(baseCode));
             preparedStatement.setString(2, CurrencyCodeUtil.normalize(targetCode));
@@ -73,10 +77,9 @@ public class ExchangeRateDao {
     }
 
     public ExchangeRate save(ExchangeRate exchangeRate) {
-        String sql = "INSERT INTO exchange_rates (base_currency_id, target_currency_id, rate) VALUES (?, ?, ?)";
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+             PreparedStatement preparedStatement = conn.prepareStatement(INSERT_SQL)) {
 
             preparedStatement.setInt(1, exchangeRate.getBaseCurrency().getId());
             preparedStatement.setInt(2, exchangeRate.getTargetCurrency().getId());
@@ -96,14 +99,8 @@ public class ExchangeRateDao {
 
     public ExchangeRate update(String baseCode, String targetCode, BigDecimal newRate) {
 
-        String sql = """
-                UPDATE exchange_rates SET rate = ?
-                WHERE base_currency_id = ( SELECT id FROM currencies WHERE code = ?)
-                AND target_currency_id = ( SELECT id FROM currencies WHERE code = ?)
-                """;
-
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+             PreparedStatement preparedStatement = conn.prepareStatement(UPDATE_SQL)) {
 
             preparedStatement.setBigDecimal(1, newRate);
             preparedStatement.setString(2, CurrencyCodeUtil.normalize(baseCode));

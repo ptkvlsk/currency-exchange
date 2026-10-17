@@ -16,12 +16,15 @@ import java.util.List;
 
 public class CurrencyDao {
 
+    private static final String SELECT_ALL_SQL = "SELECT id, code, full_name, sign FROM currencies";
+    private static final String SELECT_BY_CODE_SQL = SELECT_ALL_SQL + " WHERE code = ?";
+    private static final String INSERT_SQL = "INSERT INTO currencies (code, full_name, sign) VALUES (?, ?, ?)";
+
     public List<Currency> findAll()  {
         List<Currency> currencies = new ArrayList<>();
-        String sql = "SELECT id, code, full_name, sign FROM currencies";
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql);
+             PreparedStatement preparedStatement = conn.prepareStatement(SELECT_ALL_SQL);
              ResultSet resultSet = preparedStatement.executeQuery()) {
             while (resultSet.next()) {
                 currencies.add(mapRow(resultSet));
@@ -33,10 +36,9 @@ public class CurrencyDao {
     }
 
     public Currency findByCode(String code)  {
-        String sql = "SELECT id, code, full_name, sign FROM currencies WHERE code = ?";
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+             PreparedStatement preparedStatement = conn.prepareStatement(SELECT_BY_CODE_SQL)) {
 
             preparedStatement.setString(1, CurrencyCodeUtil.normalize(code));
 
@@ -52,10 +54,9 @@ public class CurrencyDao {
     }
 
     public Currency save(Currency currency)  {
-        String sql = "INSERT INTO currencies (code, full_name, sign) VALUES (?, ?, ?)";
 
         try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement preparedStatement = conn.prepareStatement(sql)) {
+             PreparedStatement preparedStatement = conn.prepareStatement(INSERT_SQL)) {
             preparedStatement.setString(1, CurrencyCodeUtil.normalize(currency.getCode()));
             preparedStatement.setString(2, currency.getFullName());
             preparedStatement.setString(3, currency.getSign());
