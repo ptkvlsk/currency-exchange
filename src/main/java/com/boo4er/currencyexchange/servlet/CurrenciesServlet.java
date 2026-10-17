@@ -1,6 +1,6 @@
 package com.boo4er.currencyexchange.servlet;
 
-import com.boo4er.currencyexchange.dao.CurrencyDao;
+import com.boo4er.currencyexchange.dao.JdbcCurrencyDao;
 import com.boo4er.currencyexchange.dto.CurrencyResponse;
 import com.boo4er.currencyexchange.exception.AppException;
 import com.boo4er.currencyexchange.exception.ValidationException;
@@ -20,12 +20,12 @@ import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 @WebServlet("/currencies")
 public class CurrenciesServlet extends BaseServlet {
 
-    private final CurrencyDao currencyDao = new CurrencyDao();
+    private final JdbcCurrencyDao jdbcCurrencyDao = new JdbcCurrencyDao();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            List<Currency> currencies = currencyDao.findAll();
+            List<Currency> currencies = jdbcCurrencyDao.findAll();
             List<CurrencyResponse> responses = new ArrayList<>();
             for (Currency currency : currencies) {
                 responses.add(new CurrencyResponse(currency));
@@ -56,7 +56,7 @@ public class CurrenciesServlet extends BaseServlet {
             currency.setFullName(name);
             currency.setSign(sign);
 
-            Currency saved = currencyDao.save(currency);
+            Currency saved = jdbcCurrencyDao.save(currency);
             sendJson(resp, SC_CREATED, new CurrencyResponse(saved));
         } catch (AppException e) {
             handleException(resp, e);

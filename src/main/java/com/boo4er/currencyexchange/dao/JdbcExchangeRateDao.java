@@ -16,7 +16,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ExchangeRateDao {
+public class JdbcExchangeRateDao {
 
     private static final String SELECT_SQL = """
             SELECT

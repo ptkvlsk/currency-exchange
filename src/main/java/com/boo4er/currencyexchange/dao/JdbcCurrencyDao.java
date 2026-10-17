@@ -14,7 +14,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CurrencyDao {
+public class JdbcCurrencyDao {
 
     private static final String SELECT_ALL_SQL = "SELECT id, code, full_name, sign FROM currencies";
     private static final String SELECT_BY_CODE_SQL = SELECT_ALL_SQL + " WHERE code = ?";

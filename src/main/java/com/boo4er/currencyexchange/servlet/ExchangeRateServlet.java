@@ -1,6 +1,6 @@
 package com.boo4er.currencyexchange.servlet;
 
-import com.boo4er.currencyexchange.dao.ExchangeRateDao;
+import com.boo4er.currencyexchange.dao.JdbcExchangeRateDao;
 import com.boo4er.currencyexchange.dto.ExchangeRateResponse;
 import com.boo4er.currencyexchange.exception.AppException;
 import com.boo4er.currencyexchange.exception.ValidationException;
@@ -19,7 +19,7 @@ import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 
 public class ExchangeRateServlet extends BaseServlet {
 
-    private final ExchangeRateDao exchangeRateDao = new ExchangeRateDao();
+    private final JdbcExchangeRateDao jdbcExchangeRateDao = new JdbcExchangeRateDao();
 
     private String[] extractPair(HttpServletRequest req) throws ValidationException {
         String pathInfo = req.getPathInfo();
@@ -39,7 +39,7 @@ public class ExchangeRateServlet extends BaseServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
             String[] pair = extractPair(req);
-            ExchangeRate rate = exchangeRateDao.findByPair(pair[0], pair[1]);
+            ExchangeRate rate = jdbcExchangeRateDao.findByPair(pair[0], pair[1]);
             sendJson(resp, SC_OK, new ExchangeRateResponse(rate));
         } catch (AppException e) {
             handleException(resp, e);
@@ -62,7 +62,7 @@ public class ExchangeRateServlet extends BaseServlet {
                 throw new ValidationException("Поле rate должно быть числом");
             }
 
-            ExchangeRate updated = exchangeRateDao.update(pair[0], pair[1], rate);
+            ExchangeRate updated = jdbcExchangeRateDao.update(pair[0], pair[1], rate);
             sendJson(resp, SC_OK, new ExchangeRateResponse(updated));
         } catch (AppException e) {
             handleException(resp, e);
