@@ -18,9 +18,12 @@ public class CurrencyDao {
 
     private static final String SELECT_ALL_SQL = "SELECT id, code, full_name, sign FROM currencies";
     private static final String SELECT_BY_CODE_SQL = SELECT_ALL_SQL + " WHERE code = ?";
-    private static final String INSERT_SQL = "INSERT INTO currencies (code, full_name, sign) VALUES (?, ?, ?)";
+    private static final String INSERT_SQL = """
+            INSERT INTO currencies (code, full_name, sign) VALUES (?, ?, ?)
+            RETURNING id, code, full_name, sign
+            """;
 
-    public List<Currency> findAll()  {
+    public List<Currency> findAll() {
         List<Currency> currencies = new ArrayList<>();
 
         try (Connection conn = DatabaseUtil.getConnection();
@@ -35,7 +38,7 @@ public class CurrencyDao {
         return currencies;
     }
 
-    public Currency findByCode(String code)  {
+    public Currency findByCode(String code) {
 
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(SELECT_BY_CODE_SQL)) {
@@ -53,17 +56,19 @@ public class CurrencyDao {
         throw new NotFoundException("Валюта с кодом " + code + " не найдена");
     }
 
-    public Currency save(Currency currency)  {
+    public Currency save(Currency currency) {
 
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(INSERT_SQL)) {
             preparedStatement.setString(1, CurrencyCodeUtil.normalize(currency.getCode()));
             preparedStatement.setString(2, currency.getFullName());
             preparedStatement.setString(3, currency.getSign());
-
-            preparedStatement.executeUpdate();
-
-            return findByCode(currency.getCode());
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    return mapRow(resultSet);
+                }
+            }
+            throw new DatabaseException("База не вернула сохранённую валюту");
 
         } catch (SQLException e) {
             if (e.getMessage() != null && e.getMessage().contains("UNIQUE constraint")) {

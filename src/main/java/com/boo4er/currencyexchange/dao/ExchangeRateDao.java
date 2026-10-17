@@ -19,26 +19,29 @@ import java.util.List;
 public class ExchangeRateDao {
 
     private static final String SELECT_SQL = """
-        SELECT
-            er.id, er.rate,
-            bc.id AS base_id, bc.code AS base_code, bc.full_name AS base_full_name, bc.sign AS base_sign,
-            tc.id AS target_id, tc.code AS target_code, tc.full_name AS target_full_name, tc.sign AS target_sign
-        FROM exchange_rates er
-        JOIN currencies bc ON er.base_currency_id = bc.id
-        JOIN currencies tc ON er.target_currency_id = tc.id
-        """;
+            SELECT
+                er.id, er.rate,
+                bc.id AS base_id, bc.code AS base_code, bc.full_name AS base_full_name, bc.sign AS base_sign,
+                tc.id AS target_id, tc.code AS target_code, tc.full_name AS target_full_name, tc.sign AS target_sign
+            FROM exchange_rates er
+            JOIN currencies bc ON er.base_currency_id = bc.id
+            JOIN currencies tc ON er.target_currency_id = tc.id
+            """;
 
     private static final String SELECT_BY_PAIR_SQL =
             SELECT_SQL + "WHERE bc.code = ? AND tc.code = ?";
 
-    private static final String INSERT_SQL =
-            "INSERT INTO exchange_rates (base_currency_id, target_currency_id, rate) VALUES (?, ?, ?)";
+    private static final String INSERT_SQL = """
+            INSERT INTO exchange_rates (base_currency_id, target_currency_id, rate)
+            VALUES (?, ?, ?)
+            RETURNING id, rate
+            """;
 
     private static final String UPDATE_SQL = """
-        UPDATE exchange_rates SET rate = ?
-        WHERE base_currency_id = (SELECT id FROM currencies WHERE code = ?)
-          AND target_currency_id = (SELECT id FROM currencies WHERE code = ?)
-        """;
+            UPDATE exchange_rates SET rate = ?
+            WHERE base_currency_id = (SELECT id FROM currencies WHERE code = ?)
+              AND target_currency_id = (SELECT id FROM currencies WHERE code = ?)
+            """;
 
     public List<ExchangeRate> findAll() {
         List<ExchangeRate> rates = new ArrayList<>();
@@ -85,9 +88,13 @@ public class ExchangeRateDao {
             preparedStatement.setInt(2, exchangeRate.getTargetCurrency().getId());
             preparedStatement.setBigDecimal(3, exchangeRate.getRate());
 
-            preparedStatement.executeUpdate();
-
-            return findByPair(exchangeRate.getBaseCurrency().getCode(), exchangeRate.getTargetCurrency().getCode());
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    return new ExchangeRate(resultSet.getInt("id"), exchangeRate.getBaseCurrency(),
+                            exchangeRate.getTargetCurrency(), resultSet.getBigDecimal("rate"));
+                }
+            }
+            throw new DatabaseException("База не вернула сохранённый курс");
         } catch (SQLException e) {
             if (e.getMessage() != null && e.getMessage().contains("UNIQUE constraint")) {
                 throw new ConflictException("Валютная пара " + exchangeRate.getBaseCurrency().getCode() +
