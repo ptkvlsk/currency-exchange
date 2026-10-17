@@ -8,9 +8,6 @@ import jakarta.servlet.annotation.WebListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-
 @WebListener
 public class AppContextListener implements ServletContextListener {
 
@@ -18,11 +15,12 @@ public class AppContextListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        try (Connection connection = DatabaseUtil.getConnection()) {
+        try {
+            DatabaseUtil.init();
             log.info("База данных инициализирована при старте приложения");
-        } catch (SQLException | DatabaseException e) {
+        } catch (DatabaseException e) {
             log.error("Не удалось инициализировать БД", e);
-            throw new IllegalStateException("Не удалось подключиться к базе данных при запуске", e);
+            throw new IllegalStateException("Не удалось инициализировать базу данных при запуске", e);
         }
     }
 

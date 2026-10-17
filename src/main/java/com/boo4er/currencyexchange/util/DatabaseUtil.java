@@ -1,48 +1,58 @@
 package com.boo4er.currencyexchange.util;
 
 import com.boo4er.currencyexchange.exception.DatabaseException;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
 public class DatabaseUtil {
 
-    private static String dbUrl;
+    private static volatile HikariDataSource dataSource;
     private static final String INIT_SCRIPT_PATH = "db/init.sql";
-    private static boolean isInitialized = false;
     private static final Logger log = LoggerFactory.getLogger(DatabaseUtil.class);
 
-    static {
-        try {
-            Class.forName("org.sqlite.JDBC");
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException("Не удалось загрузить драйвер SQLite", e);
-        }
-    }
-
     public static Connection getConnection() throws SQLException {
-        if (!isInitialized) {
-            initializeDatabase();
+        HikariDataSource ds = dataSource;
+        if (ds == null) {
+            throw new IllegalStateException("База дынных не инициализирована: сначала нужно вызвать DatabaseUtil.init()");
         }
-        return DriverManager.getConnection(dbUrl);
+        return ds.getConnection();
     }
 
-    private static void initializeDatabase() {
+    public static synchronized void init() {
+        if (dataSource != null) {
+            return;
+        }
+
         String dbPath = resolveDbPath();
-        dbUrl = "jdbc:sqlite:" + dbPath;
         File parentDir = new File(dbPath).getParentFile();
         if (parentDir != null && !parentDir.exists()) {
             parentDir.mkdirs();
         }
-        executeInitScript();
-        isInitialized = true;
+
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl("jdbc:sqlite:" + dbPath);
+        config.setDriverClassName("org.sqlite.JDBC");
+        config.setMinimumIdle(5);
+
+        try {
+            dataSource = new HikariDataSource(config);
+            executeInitScript();
+        } catch (RuntimeException e) {
+            if (dataSource != null) {
+                dataSource.close();
+                dataSource = null;
+            }
+            throw e;
+        }
     }
 
     private static void executeInitScript() {
@@ -63,7 +73,7 @@ public class DatabaseUtil {
 
             String[] queries = sql.toString().split(";");
 
-            try (Connection connection = DriverManager.getConnection(dbUrl);
+            try (Connection connection = dataSource.getConnection();
                  Statement statement = connection.createStatement()) {
                 for (String query : queries) {
                     String trimmed = query.trim();
