@@ -1,5 +1,6 @@
 package com.boo4er.currencyexchange.servlet;
 
+import com.boo4er.currencyexchange.dao.CurrencyDao;
 import com.boo4er.currencyexchange.dao.JdbcCurrencyDao;
 import com.boo4er.currencyexchange.dto.CurrencyResponse;
 import com.boo4er.currencyexchange.exception.AppException;
@@ -18,7 +19,7 @@ import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 
 public class CurrencyServlet extends BaseServlet {
 
-    private final JdbcCurrencyDao jdbcCurrencyDao = new JdbcCurrencyDao();
+    private final CurrencyDao currencyDao = new JdbcCurrencyDao();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -30,7 +31,7 @@ public class CurrencyServlet extends BaseServlet {
 
             String code = pathInfo.substring(1);
 
-            Currency currency = jdbcCurrencyDao.findByCode(code);
+            Currency currency = currencyDao.findByCode(code);
             sendJson(resp, SC_OK, new CurrencyResponse(currency));
         } catch (AppException e) {
             handleException(resp, e);

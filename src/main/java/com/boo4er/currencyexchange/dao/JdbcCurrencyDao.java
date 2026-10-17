@@ -14,7 +14,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class JdbcCurrencyDao {
+public class JdbcCurrencyDao implements CurrencyDao {
 
     private static final String SELECT_ALL_SQL = "SELECT id, code, full_name, sign FROM currencies";
     private static final String SELECT_BY_CODE_SQL = SELECT_ALL_SQL + " WHERE code = ?";
@@ -23,6 +23,7 @@ public class JdbcCurrencyDao {
             RETURNING id, code, full_name, sign
             """;
 
+    @Override
     public List<Currency> findAll() {
         List<Currency> currencies = new ArrayList<>();
 
@@ -38,6 +39,7 @@ public class JdbcCurrencyDao {
         return currencies;
     }
 
+    @Override
     public Currency findByCode(String code) {
 
         try (Connection conn = DatabaseUtil.getConnection();
@@ -56,6 +58,7 @@ public class JdbcCurrencyDao {
         throw new NotFoundException("Валюта с кодом " + code + " не найдена");
     }
 
+    @Override
     public Currency save(Currency currency) {
 
         try (Connection conn = DatabaseUtil.getConnection();

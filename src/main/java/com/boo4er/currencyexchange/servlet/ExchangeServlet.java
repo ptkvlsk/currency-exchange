@@ -1,5 +1,6 @@
 package com.boo4er.currencyexchange.servlet;
 
+import com.boo4er.currencyexchange.dao.ExchangeRateDao;
 import com.boo4er.currencyexchange.dao.JdbcExchangeRateDao;
 import com.boo4er.currencyexchange.dto.ExchangeResponse;
 import com.boo4er.currencyexchange.exception.AppException;
@@ -20,7 +21,7 @@ import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 @WebServlet("/exchange")
 public class ExchangeServlet extends BaseServlet {
 
-    private final JdbcExchangeRateDao jdbcExchangeRateDao = new JdbcExchangeRateDao();
+    private final ExchangeRateDao exchangeRateDao = new JdbcExchangeRateDao();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -56,11 +57,11 @@ public class ExchangeServlet extends BaseServlet {
 
     private ExchangeRate findRateForExchange(String from, String to)  {
         try {
-            return jdbcExchangeRateDao.findByPair(from, to);
+            return exchangeRateDao.findByPair(from, to);
         } catch (NotFoundException e) {
         }
         try {
-            ExchangeRate reverse = jdbcExchangeRateDao.findByPair(to, from);
+            ExchangeRate reverse = exchangeRateDao.findByPair(to, from);
             ExchangeRate reverseRate = new ExchangeRate();
 
             reverseRate.setBaseCurrency(reverse.getTargetCurrency());
@@ -70,8 +71,8 @@ public class ExchangeServlet extends BaseServlet {
         } catch (NotFoundException e) {
         }
         try {
-            ExchangeRate usdToFrom = jdbcExchangeRateDao.findByPair("USD", from);
-            ExchangeRate usdToTarget = jdbcExchangeRateDao.findByPair("USD", to);
+            ExchangeRate usdToFrom = exchangeRateDao.findByPair("USD", from);
+            ExchangeRate usdToTarget = exchangeRateDao.findByPair("USD", to);
 
             ExchangeRate crossRate = new ExchangeRate();
             crossRate.setBaseCurrency(usdToFrom.getTargetCurrency());

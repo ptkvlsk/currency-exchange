@@ -16,7 +16,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class JdbcExchangeRateDao {
+public class JdbcExchangeRateDao implements ExchangeRateDao {
 
     private static final String SELECT_SQL = """
             SELECT
@@ -43,6 +43,7 @@ public class JdbcExchangeRateDao {
               AND target_currency_id = (SELECT id FROM currencies WHERE code = ?)
             """;
 
+    @Override
     public List<ExchangeRate> findAll() {
         List<ExchangeRate> rates = new ArrayList<>();
 
@@ -58,6 +59,7 @@ public class JdbcExchangeRateDao {
         return rates;
     }
 
+    @Override
     public ExchangeRate findByPair(String baseCode, String targetCode) {
 
         try (Connection conn = DatabaseUtil.getConnection();
@@ -79,6 +81,7 @@ public class JdbcExchangeRateDao {
                 + " " + CurrencyCodeUtil.normalize(targetCode) + " не найден");
     }
 
+    @Override
     public ExchangeRate save(ExchangeRate exchangeRate) {
 
         try (Connection conn = DatabaseUtil.getConnection();
@@ -104,6 +107,7 @@ public class JdbcExchangeRateDao {
         }
     }
 
+    @Override
     public ExchangeRate update(String baseCode, String targetCode, BigDecimal newRate) {
 
         try (Connection conn = DatabaseUtil.getConnection();

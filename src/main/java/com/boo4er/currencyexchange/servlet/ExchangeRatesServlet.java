@@ -1,5 +1,7 @@
 package com.boo4er.currencyexchange.servlet;
 
+import com.boo4er.currencyexchange.dao.CurrencyDao;
+import com.boo4er.currencyexchange.dao.ExchangeRateDao;
 import com.boo4er.currencyexchange.dao.JdbcCurrencyDao;
 import com.boo4er.currencyexchange.dao.JdbcExchangeRateDao;
 import com.boo4er.currencyexchange.dto.ExchangeRateResponse;
@@ -23,13 +25,13 @@ import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 
 public class ExchangeRatesServlet extends BaseServlet {
 
-    private final JdbcCurrencyDao jdbcCurrencyDao = new JdbcCurrencyDao();
-    private final JdbcExchangeRateDao jdbcExchangeRateDao = new JdbcExchangeRateDao();
+    private final CurrencyDao currencyDao = new JdbcCurrencyDao();
+    private final ExchangeRateDao exchangeRateDao = new JdbcExchangeRateDao();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            List<ExchangeRate> rates = jdbcExchangeRateDao.findAll();
+            List<ExchangeRate> rates = exchangeRateDao.findAll();
             List<ExchangeRateResponse> response = rates.stream().map(ExchangeRateResponse::new).toList();
             sendJson(resp, SC_OK, response);
         } catch (AppException e) {
@@ -55,8 +57,8 @@ public class ExchangeRatesServlet extends BaseServlet {
                 throw new ValidationException("Поле rate должно быть числом");
             }
 
-            Currency baseCurrency = jdbcCurrencyDao.findByCode(baseCode);
-            Currency targetCurrency = jdbcCurrencyDao.findByCode(targetCode);
+            Currency baseCurrency = currencyDao.findByCode(baseCode);
+            Currency targetCurrency = currencyDao.findByCode(targetCode);
 
             ExchangeRate exchangeRate = new ExchangeRate();
 
@@ -64,7 +66,7 @@ public class ExchangeRatesServlet extends BaseServlet {
             exchangeRate.setTargetCurrency(targetCurrency);
             exchangeRate.setRate(rate);
 
-            ExchangeRate saved = jdbcExchangeRateDao.save(exchangeRate);
+            ExchangeRate saved = exchangeRateDao.save(exchangeRate);
             sendJson(resp, SC_CREATED, new ExchangeRateResponse(saved));
         } catch (AppException e) {
             handleException(resp, e);
