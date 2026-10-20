@@ -13,16 +13,19 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
-public class DatabaseUtil {
+public final class DatabaseUtil {
 
     private static volatile HikariDataSource dataSource;
     private static final String INIT_SCRIPT_PATH = "db/init.sql";
     private static final Logger log = LoggerFactory.getLogger(DatabaseUtil.class);
 
+    private DatabaseUtil() {
+    }
+
     public static Connection getConnection() throws SQLException {
         HikariDataSource ds = dataSource;
         if (ds == null) {
-            throw new IllegalStateException("База дынных не инициализирована: сначала нужно вызвать DatabaseUtil.init()");
+            throw new IllegalStateException("База данных не инициализирована: сначала нужно вызвать DatabaseUtil.init()");
         }
         return ds.getConnection();
     }
