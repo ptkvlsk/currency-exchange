@@ -4,6 +4,7 @@ import com.boo4er.currencyexchange.dao.CurrencyDao;
 import com.boo4er.currencyexchange.dao.JdbcCurrencyDao;
 import com.boo4er.currencyexchange.dto.CurrencyResponse;
 import com.boo4er.currencyexchange.exception.AppException;
+import com.boo4er.currencyexchange.exception.NotFoundException;
 import com.boo4er.currencyexchange.exception.ValidationException;
 import com.boo4er.currencyexchange.model.Currency;
 import jakarta.servlet.ServletException;
@@ -31,7 +32,8 @@ public class CurrencyServlet extends BaseServlet {
 
             String code = pathInfo.substring(1);
 
-            Currency currency = currencyDao.findByCode(code);
+            Currency currency = currencyDao.findByCode(code).
+                    orElseThrow(() -> new NotFoundException("Валюта с кодом " + code + " не найдена"));
             sendJson(resp, SC_OK, new CurrencyResponse(currency));
         } catch (AppException e) {
             handleException(resp, e);

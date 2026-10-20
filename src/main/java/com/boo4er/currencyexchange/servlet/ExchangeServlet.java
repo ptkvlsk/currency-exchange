@@ -15,6 +15,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Optional;
 
 import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 
@@ -55,33 +56,38 @@ public class ExchangeServlet extends BaseServlet {
         }
     }
 
-    private ExchangeRate findRateForExchange(String from, String to)  {
-        try {
-            return exchangeRateDao.findByPair(from, to);
-        } catch (NotFoundException e) {
-        }
-        try {
-            ExchangeRate reverse = exchangeRateDao.findByPair(to, from);
-            ExchangeRate reverseRate = new ExchangeRate();
+    private ExchangeRate findRateForExchange(String from, String to) {
+        return exchangeRateDao.findByPair(from, to)
+                .or(() -> findReverse(from, to))
+                .or(() -> findCross(from, to))
+                .orElseThrow(() -> new NotFoundException("Курс для пары " + from + " " + to + " е найден"));
+    }
 
-            reverseRate.setBaseCurrency(reverse.getTargetCurrency());
-            reverseRate.setTargetCurrency(reverse.getBaseCurrency());
-            reverseRate.setRate(BigDecimal.ONE.divide(reverse.getRate(), 6, RoundingMode.HALF_UP));
-            return reverseRate;
-        } catch (NotFoundException e) {
-        }
-        try {
-            ExchangeRate usdToFrom = exchangeRateDao.findByPair("USD", from);
-            ExchangeRate usdToTarget = exchangeRateDao.findByPair("USD", to);
+    private Optional<ExchangeRate> findReverse(String from, String to) {
+        return exchangeRateDao.findByPair(to, from).map(reverse -> {
+            ExchangeRate result = new ExchangeRate();
+            result.setBaseCurrency(reverse.getTargetCurrency());
+            result.setTargetCurrency(reverse.getBaseCurrency());
+            result.setRate(BigDecimal.ONE.divide(reverse.getRate(), 6, RoundingMode.HALF_UP));
+            return result;
+        });
+    }
 
-            ExchangeRate crossRate = new ExchangeRate();
-            crossRate.setBaseCurrency(usdToFrom.getTargetCurrency());
-            crossRate.setTargetCurrency(usdToTarget.getTargetCurrency());
-            crossRate.setRate(usdToTarget.getRate().divide(usdToFrom.getRate(), 6, RoundingMode.HALF_UP));
-            return crossRate;
-        } catch (NotFoundException e) {
+    private Optional<ExchangeRate> findCross(String from, String to) {
+        Optional<ExchangeRate> usdToFrom = exchangeRateDao.findByPair("USD", from);
+        Optional<ExchangeRate> usdToTarget = exchangeRateDao.findByPair("USD", to);
+
+        if (usdToFrom.isEmpty() || usdToTarget.isEmpty()) {
+            return Optional.empty();
         }
 
-        throw new NotFoundException("Курс для пары " + from + " " + to + " не найден");
+        ExchangeRate base = usdToFrom.get();
+        ExchangeRate target = usdToTarget.get();
+
+        ExchangeRate crossRate = new ExchangeRate();
+        crossRate.setBaseCurrency(base.getTargetCurrency());
+        crossRate.setTargetCurrency(target.getTargetCurrency());
+        crossRate.setRate(target.getRate().divide(base.getRate(), 6, RoundingMode.HALF_UP));
+        return Optional.of(crossRate);
     }
 }

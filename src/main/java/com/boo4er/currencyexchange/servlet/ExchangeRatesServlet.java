@@ -6,6 +6,7 @@ import com.boo4er.currencyexchange.dao.JdbcCurrencyDao;
 import com.boo4er.currencyexchange.dao.JdbcExchangeRateDao;
 import com.boo4er.currencyexchange.dto.ExchangeRateResponse;
 import com.boo4er.currencyexchange.exception.AppException;
+import com.boo4er.currencyexchange.exception.NotFoundException;
 import com.boo4er.currencyexchange.exception.ValidationException;
 import com.boo4er.currencyexchange.model.Currency;
 import com.boo4er.currencyexchange.model.ExchangeRate;
@@ -57,8 +58,10 @@ public class ExchangeRatesServlet extends BaseServlet {
                 throw new ValidationException("Поле rate должно быть числом");
             }
 
-            Currency baseCurrency = currencyDao.findByCode(baseCode);
-            Currency targetCurrency = currencyDao.findByCode(targetCode);
+            Currency baseCurrency = currencyDao.findByCode(baseCode)
+                    .orElseThrow(() -> new NotFoundException("Валюта с кодом " + baseCode + " не найдена"));
+            Currency targetCurrency = currencyDao.findByCode(targetCode)
+                    .orElseThrow(() -> new NotFoundException("Валюта с кодом " + targetCode + " не найдена"));
 
             ExchangeRate exchangeRate = new ExchangeRate();
 

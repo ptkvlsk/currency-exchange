@@ -2,7 +2,6 @@ package com.boo4er.currencyexchange.dao;
 
 import com.boo4er.currencyexchange.exception.ConflictException;
 import com.boo4er.currencyexchange.exception.DatabaseException;
-import com.boo4er.currencyexchange.exception.NotFoundException;
 import com.boo4er.currencyexchange.model.Currency;
 import com.boo4er.currencyexchange.util.CurrencyCodeUtil;
 import com.boo4er.currencyexchange.util.DatabaseUtil;
@@ -13,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class JdbcCurrencyDao implements CurrencyDao {
 
@@ -40,7 +40,7 @@ public class JdbcCurrencyDao implements CurrencyDao {
     }
 
     @Override
-    public Currency findByCode(String code) {
+    public Optional<Currency> findByCode(String code) {
 
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(SELECT_BY_CODE_SQL)) {
@@ -49,13 +49,13 @@ public class JdbcCurrencyDao implements CurrencyDao {
 
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
-                    return mapRow(resultSet);
+                    return Optional.of(mapRow(resultSet));
                 }
             }
         } catch (SQLException e) {
             throw new DatabaseException("Ошибка при поиске валюты", e);
         }
-        throw new NotFoundException("Валюта с кодом " + code + " не найдена");
+        return Optional.empty();
     }
 
     @Override

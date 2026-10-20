@@ -2,7 +2,6 @@ package com.boo4er.currencyexchange.dao;
 
 import com.boo4er.currencyexchange.exception.ConflictException;
 import com.boo4er.currencyexchange.exception.DatabaseException;
-import com.boo4er.currencyexchange.exception.NotFoundException;
 import com.boo4er.currencyexchange.model.Currency;
 import com.boo4er.currencyexchange.model.ExchangeRate;
 import com.boo4er.currencyexchange.util.CurrencyCodeUtil;
@@ -15,6 +14,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class JdbcExchangeRateDao implements ExchangeRateDao {
 
@@ -60,7 +60,7 @@ public class JdbcExchangeRateDao implements ExchangeRateDao {
     }
 
     @Override
-    public ExchangeRate findByPair(String baseCode, String targetCode) {
+    public Optional<ExchangeRate> findByPair(String baseCode, String targetCode) {
 
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(SELECT_BY_PAIR_SQL)) {
@@ -70,15 +70,14 @@ public class JdbcExchangeRateDao implements ExchangeRateDao {
 
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
-                    return mapRow(resultSet);
+                    return Optional.of(mapRow(resultSet));
                 }
             }
 
         } catch (SQLException e) {
             throw new DatabaseException("Ошибка при поиске курса", e);
         }
-        throw new NotFoundException("Курс для пары " + CurrencyCodeUtil.normalize(baseCode)
-                + " " + CurrencyCodeUtil.normalize(targetCode) + " не найден");
+        return Optional.empty();
     }
 
     @Override
@@ -108,7 +107,7 @@ public class JdbcExchangeRateDao implements ExchangeRateDao {
     }
 
     @Override
-    public ExchangeRate update(String baseCode, String targetCode, BigDecimal newRate) {
+    public Optional<ExchangeRate> update(String baseCode, String targetCode, BigDecimal newRate) {
 
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(UPDATE_SQL)) {
@@ -119,8 +118,7 @@ public class JdbcExchangeRateDao implements ExchangeRateDao {
 
             int rows = preparedStatement.executeUpdate();
             if (rows == 0) {
-                throw new NotFoundException("Курс для пары " + CurrencyCodeUtil.normalize(baseCode)
-                        + " " + CurrencyCodeUtil.normalize(targetCode) + " не найден");
+                return Optional.empty();
             }
         } catch (SQLException e) {
             throw new DatabaseException("Ошибка при обновлении курса", e);
