@@ -65,4 +65,12 @@ public abstract class BaseServlet extends HttpServlet {
             throw new ValidationException("Отсутствует поле " + field);
         }
     }
+
+    protected <T> T getService(Class<T> type) {
+        Object service = getServletContext().getAttribute(type.getName());
+        if (service == null) {
+            throw new IllegalStateException("Сервис " + type.getSimpleName() + " не найден в ServletContext");
+        }
+        return type.cast(service);
+    }
 }
