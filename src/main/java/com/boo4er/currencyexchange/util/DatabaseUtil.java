@@ -41,7 +41,7 @@ public class DatabaseUtil {
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl("jdbc:sqlite:" + dbPath);
         config.setDriverClassName("org.sqlite.JDBC");
-        config.setMinimumIdle(5);
+        config.setMaximumPoolSize(5);
 
         try {
             dataSource = new HikariDataSource(config);
