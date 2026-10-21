@@ -1,13 +1,10 @@
 package com.boo4er.currencyexchange.servlet;
 
-import com.boo4er.currencyexchange.dao.ExchangeRateDao;
-import com.boo4er.currencyexchange.dao.JdbcExchangeRateDao;
 import com.boo4er.currencyexchange.dto.ExchangeRateResponse;
 import com.boo4er.currencyexchange.exception.AppException;
-import com.boo4er.currencyexchange.exception.NotFoundException;
 import com.boo4er.currencyexchange.exception.ValidationException;
 import com.boo4er.currencyexchange.model.ExchangeRate;
-import com.boo4er.currencyexchange.util.CurrencyCodeUtil;
+import com.boo4er.currencyexchange.service.ExchangeRateService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,11 +19,11 @@ import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 
 public class ExchangeRateServlet extends BaseServlet {
 
-    private final ExchangeRateDao exchangeRateDao = new JdbcExchangeRateDao();
+    private ExchangeRateService exchangeRateService;
 
-    private NotFoundException rateNotFound(String[] pair) {
-        return new NotFoundException("Курс для пары " + CurrencyCodeUtil.normalize(pair[0])
-                + " " + CurrencyCodeUtil.normalize(pair[1]) + " не найден");
+    @Override
+    public void init() {
+        exchangeRateService = getService(ExchangeRateService.class);
     }
 
     private String[] extractPair(HttpServletRequest req) throws ValidationException {
@@ -47,8 +44,7 @@ public class ExchangeRateServlet extends BaseServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
             String[] pair = extractPair(req);
-            ExchangeRate rate = exchangeRateDao.findByPair(pair[0], pair[1])
-                    .orElseThrow(() -> rateNotFound(pair));
+            ExchangeRate rate = exchangeRateService.getByPair(pair[0], pair[1]);
             sendJson(resp, SC_OK, new ExchangeRateResponse(rate));
         } catch (AppException e) {
             handleException(resp, e);
@@ -71,8 +67,7 @@ public class ExchangeRateServlet extends BaseServlet {
                 throw new ValidationException("Поле rate должно быть числом");
             }
 
-            ExchangeRate updated = exchangeRateDao.update(pair[0], pair[1], rate)
-                    .orElseThrow(() -> rateNotFound(pair));
+            ExchangeRate updated = exchangeRateService.updateRate(pair[0], pair[1], rate);
             sendJson(resp, SC_OK, new ExchangeRateResponse(updated));
         } catch (AppException e) {
             handleException(resp, e);

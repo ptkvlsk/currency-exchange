@@ -1,15 +1,10 @@
 package com.boo4er.currencyexchange.servlet;
 
-import com.boo4er.currencyexchange.dao.CurrencyDao;
-import com.boo4er.currencyexchange.dao.ExchangeRateDao;
-import com.boo4er.currencyexchange.dao.JdbcCurrencyDao;
-import com.boo4er.currencyexchange.dao.JdbcExchangeRateDao;
 import com.boo4er.currencyexchange.dto.ExchangeRateResponse;
 import com.boo4er.currencyexchange.exception.AppException;
-import com.boo4er.currencyexchange.exception.NotFoundException;
 import com.boo4er.currencyexchange.exception.ValidationException;
-import com.boo4er.currencyexchange.model.Currency;
 import com.boo4er.currencyexchange.model.ExchangeRate;
+import com.boo4er.currencyexchange.service.ExchangeRateService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,13 +21,17 @@ import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 
 public class ExchangeRatesServlet extends BaseServlet {
 
-    private final CurrencyDao currencyDao = new JdbcCurrencyDao();
-    private final ExchangeRateDao exchangeRateDao = new JdbcExchangeRateDao();
+    private ExchangeRateService exchangeRateService;
+
+    @Override
+    public void init() {
+        exchangeRateService = getService(ExchangeRateService.class);
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            List<ExchangeRate> rates = exchangeRateDao.findAll();
+            List<ExchangeRate> rates = exchangeRateService.getAll();
             List<ExchangeRateResponse> response = rates.stream().map(ExchangeRateResponse::new).toList();
             sendJson(resp, SC_OK, response);
         } catch (AppException e) {
@@ -58,18 +57,8 @@ public class ExchangeRatesServlet extends BaseServlet {
                 throw new ValidationException("Поле rate должно быть числом");
             }
 
-            Currency baseCurrency = currencyDao.findByCode(baseCode)
-                    .orElseThrow(() -> new NotFoundException("Валюта с кодом " + baseCode + " не найдена"));
-            Currency targetCurrency = currencyDao.findByCode(targetCode)
-                    .orElseThrow(() -> new NotFoundException("Валюта с кодом " + targetCode + " не найдена"));
+            ExchangeRate saved = exchangeRateService.create(baseCode, targetCode, rate);
 
-            ExchangeRate exchangeRate = new ExchangeRate();
-
-            exchangeRate.setBaseCurrency(baseCurrency);
-            exchangeRate.setTargetCurrency(targetCurrency);
-            exchangeRate.setRate(rate);
-
-            ExchangeRate saved = exchangeRateDao.save(exchangeRate);
             sendJson(resp, SC_CREATED, new ExchangeRateResponse(saved));
         } catch (AppException e) {
             handleException(resp, e);
