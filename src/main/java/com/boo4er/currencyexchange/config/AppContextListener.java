@@ -7,6 +7,7 @@ import com.boo4er.currencyexchange.dao.JdbcExchangeRateDao;
 import com.boo4er.currencyexchange.exception.DatabaseException;
 import com.boo4er.currencyexchange.service.CurrencyService;
 import com.boo4er.currencyexchange.service.ExchangeRateService;
+import com.boo4er.currencyexchange.service.ExchangeService;
 import com.boo4er.currencyexchange.util.DatabaseUtil;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletContextEvent;
@@ -35,12 +36,14 @@ public class AppContextListener implements ServletContextListener {
     private void registerServices(ServletContext servletContext) {
         CurrencyDao currencyDao = new JdbcCurrencyDao();
         ExchangeRateDao exchangeRateDao = new JdbcExchangeRateDao();
+        ExchangeService exchangeService = new ExchangeService(exchangeRateDao);
 
         CurrencyService currencyService = new CurrencyService(currencyDao);
         ExchangeRateService exchangeRateService = new ExchangeRateService(exchangeRateDao, currencyService);
 
         servletContext.setAttribute(CurrencyService.class.getName(), currencyService);
         servletContext.setAttribute(ExchangeRateService.class.getName(), exchangeRateService);
+        servletContext.setAttribute(ExchangeService.class.getName(), exchangeService);
         log.info("Сервисы зарегестрированы");
     }
 
