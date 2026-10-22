@@ -1,9 +1,9 @@
 package com.boo4er.currencyexchange.servlet;
 
-import com.boo4er.currencyexchange.exception.ValidationException;
 import com.boo4er.currencyexchange.mapper.ResponseMapper;
 import com.boo4er.currencyexchange.model.Currency;
 import com.boo4er.currencyexchange.service.CurrencyService;
+import com.boo4er.currencyexchange.validation.RequestValidator;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,17 +33,9 @@ public class CurrenciesServlet extends BaseServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String name = req.getParameter("name");
-        String code = req.getParameter("code");
-        String sign = req.getParameter("sign");
-
-        requireNonBlank(name, "name");
-        requireNonBlank(code, "code");
-        requireNonBlank(sign, "sign");
-
-        if (sign.length() > 3) {
-            throw new ValidationException("Поле sign должно быть не длиннее 3 символов");
-        }
+        String name = RequestValidator.requireText(req.getParameter("name"), "name");
+        String code = RequestValidator.requireCurrencyCode(req.getParameter("code"), "code");
+        String sign = RequestValidator.requireSign(req.getParameter("sign"), "sign");
 
         Currency currency = new Currency();
         currency.setCode(code);

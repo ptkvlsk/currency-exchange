@@ -1,9 +1,9 @@
 package com.boo4er.currencyexchange.servlet;
 
-import com.boo4er.currencyexchange.exception.ValidationException;
 import com.boo4er.currencyexchange.mapper.ResponseMapper;
 import com.boo4er.currencyexchange.model.ExchangeRate;
 import com.boo4er.currencyexchange.service.ExchangeRateService;
+import com.boo4er.currencyexchange.validation.RequestValidator;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,20 +35,11 @@ public class ExchangeRatesServlet extends BaseServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String baseCode = req.getParameter("baseCurrencyCode");
-        String targetCode = req.getParameter("targetCurrencyCode");
-        String rateStr = req.getParameter("rate");
+        String baseCode = RequestValidator.requireCurrencyCode(req.getParameter("baseCurrencyCode"), "baseCurrencyCode");
+        String targetCode = RequestValidator.requireCurrencyCode(req.getParameter("TargetCurrencyCode"), "targetCurrencyCode");
+        BigDecimal rate = RequestValidator.requirePositiveNumber(req.getParameter("rate"), "rate");
 
-        requireNonBlank(baseCode, "baseCurrencyCode");
-        requireNonBlank(targetCode, "targetCurrencyCode");
-        requireNonBlank(rateStr, "rate");
-
-        BigDecimal rate;
-        try {
-            rate = new BigDecimal(rateStr);
-        } catch (NumberFormatException e) {
-            throw new ValidationException("Поле rate должно быть числом");
-        }
+        RequestValidator.requireDifferent(baseCode, targetCode, "Валюты в паре должны быть разными");
 
         ExchangeRate saved = exchangeRateService.create(baseCode, targetCode, rate);
 

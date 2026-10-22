@@ -4,6 +4,7 @@ import com.boo4er.currencyexchange.exception.ValidationException;
 import com.boo4er.currencyexchange.mapper.ResponseMapper;
 import com.boo4er.currencyexchange.model.Currency;
 import com.boo4er.currencyexchange.service.CurrencyService;
+import com.boo4er.currencyexchange.validation.RequestValidator;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,7 +32,7 @@ public class CurrencyServlet extends BaseServlet {
             throw new ValidationException("Код валюты отсутствует в адресе");
         }
 
-        String code = pathInfo.substring(1);
+        String code = RequestValidator.requireCurrencyCode(pathInfo.substring(1), "code");
 
         Currency currency = currencyService.getByCode(code);
         sendJson(resp, SC_OK, ResponseMapper.toCurrencyResponse(currency));

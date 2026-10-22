@@ -1,9 +1,9 @@
 package com.boo4er.currencyexchange.servlet;
 
-import com.boo4er.currencyexchange.exception.ValidationException;
 import com.boo4er.currencyexchange.mapper.ResponseMapper;
 import com.boo4er.currencyexchange.service.ExchangeResult;
 import com.boo4er.currencyexchange.service.ExchangeService;
+import com.boo4er.currencyexchange.validation.RequestValidator;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,20 +27,9 @@ public class ExchangeServlet extends BaseServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
-        String from = req.getParameter("from");
-        String to = req.getParameter("to");
-        String amountStr = req.getParameter("amount");
-
-        requireNonBlank(from, "from");
-        requireNonBlank(to, "to");
-        requireNonBlank(amountStr, "amount");
-
-        BigDecimal amount;
-        try {
-            amount = new BigDecimal(amountStr);
-        } catch (NumberFormatException e) {
-            throw new ValidationException("Поле amount должно быть числом");
-        }
+        String from = RequestValidator.requireCurrencyCode(req.getParameter("from"), "from");
+        String to = RequestValidator.requireCurrencyCode(req.getParameter("to"), "to");
+        BigDecimal amount = RequestValidator.requirePositiveNumber(req.getParameter("amount"), "amount");
 
         ExchangeResult result = exchangeService.exchange(from, to, amount);
 

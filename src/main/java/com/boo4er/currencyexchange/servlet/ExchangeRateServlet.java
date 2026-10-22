@@ -4,6 +4,7 @@ import com.boo4er.currencyexchange.exception.ValidationException;
 import com.boo4er.currencyexchange.mapper.ResponseMapper;
 import com.boo4er.currencyexchange.model.ExchangeRate;
 import com.boo4er.currencyexchange.service.ExchangeRateService;
+import com.boo4er.currencyexchange.validation.RequestValidator;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,7 +37,9 @@ public class ExchangeRateServlet extends BaseServlet {
         if (pair.length() != 6) {
             throw new ValidationException("Некорректная валютная пара");
         }
-        return new String[]{pair.substring(0, 3), pair.substring(3)};
+        String base = RequestValidator.requireCurrencyCode(pair.substring(0, 3), "baseCurrencyCode");
+        String target = RequestValidator.requireCurrencyCode(pair.substring(3), "targetCurrencyCode");
+        return new String[]{base, target};
     }
 
     @Override
@@ -51,16 +54,7 @@ public class ExchangeRateServlet extends BaseServlet {
     protected void doPatch(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String[] pair = extractPair(req);
 
-        String rateStr = req.getParameter("rate");
-
-        requireNonBlank(rateStr, "rate");
-
-        BigDecimal rate;
-        try {
-            rate = new BigDecimal(rateStr);
-        } catch (NumberFormatException e) {
-            throw new ValidationException("Поле rate должно быть числом");
-        }
+        BigDecimal rate = RequestValidator.requirePositiveNumber(req.getParameter("rate"), "rate");
 
         ExchangeRate updated = exchangeRateService.updateRate(pair[0], pair[1], rate);
         sendJson(resp, SC_OK, ResponseMapper.toExchangeRateResponse(updated));
