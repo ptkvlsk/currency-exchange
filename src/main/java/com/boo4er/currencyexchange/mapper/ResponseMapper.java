@@ -16,7 +16,10 @@ public final class ResponseMapper {
     }
 
     public static CurrencyResponse toCurrencyResponse(Currency currency) {
-        return new CurrencyResponse(currency);
+        return new CurrencyResponse(currency.getId(),
+                currency.getFullName(),
+                currency.getCode(),
+                currency.getSign());
     }
 
     public static List<CurrencyResponse> toCurrencyResponseList(List<Currency> currencies) {
@@ -24,7 +27,11 @@ public final class ResponseMapper {
     }
 
     public static ExchangeRateResponse toExchangeRateResponse(ExchangeRate rate) {
-        return new ExchangeRateResponse(rate);
+        return new ExchangeRateResponse(
+                rate.getId(),
+                toCurrencyResponse(rate.getBaseCurrency()),
+                toCurrencyResponse(rate.getTargetCurrency()),
+                rate.getRate());
     }
 
     public static List<ExchangeRateResponse> toExchangeRateResponseList(List<ExchangeRate> rates) {
@@ -32,6 +39,13 @@ public final class ResponseMapper {
     }
 
     public static ExchangeResponse toExchangeResponse(ExchangeResult result) {
-        return new ExchangeResponse(result.rate(), result.amount(), result.convertedAmount());
+        ExchangeRate rate = result.rate();
+        return new ExchangeResponse(
+                toCurrencyResponse(rate.getBaseCurrency()),
+                toCurrencyResponse(rate.getTargetCurrency()),
+                rate.getRate(),
+                result.amount(),
+                result.convertedAmount()
+        );
     }
 }
