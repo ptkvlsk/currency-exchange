@@ -1,6 +1,6 @@
 package com.boo4er.currencyexchange.dao;
 
-import com.boo4er.currencyexchange.exception.ConflictException;
+import com.boo4er.currencyexchange.exception.AlreadyExistsException;
 import com.boo4er.currencyexchange.exception.DatabaseException;
 import com.boo4er.currencyexchange.model.Currency;
 import com.boo4er.currencyexchange.model.ExchangeRate;
@@ -99,7 +99,7 @@ public class JdbcExchangeRateDao implements ExchangeRateDao {
             throw new DatabaseException("База не вернула сохранённый курс");
         } catch (SQLException e) {
             if (e.getMessage() != null && e.getMessage().contains("UNIQUE constraint")) {
-                throw new ConflictException("Валютная пара " + exchangeRate.getBaseCurrency().getCode() +
+                throw new AlreadyExistsException("Валютная пара " + exchangeRate.getBaseCurrency().getCode() +
                         " " + exchangeRate.getTargetCurrency().getCode() + " уже существует");
             }
             throw new DatabaseException("Ошибка при создании курса", e);

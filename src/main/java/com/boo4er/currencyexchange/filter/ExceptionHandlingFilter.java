@@ -2,7 +2,7 @@ package com.boo4er.currencyexchange.filter;
 
 import com.boo4er.currencyexchange.dto.ErrorResponse;
 import com.boo4er.currencyexchange.exception.AppException;
-import com.boo4er.currencyexchange.exception.ConflictException;
+import com.boo4er.currencyexchange.exception.AlreadyExistsException;
 import com.boo4er.currencyexchange.exception.NotFoundException;
 import com.boo4er.currencyexchange.exception.ValidationException;
 import com.boo4er.currencyexchange.util.JsonUtil;
@@ -54,7 +54,7 @@ public class ExceptionHandlingFilter implements Filter {
         if (e instanceof NotFoundException) {
             return SC_NOT_FOUND;
         }
-        if (e instanceof ConflictException) {
+        if (e instanceof AlreadyExistsException) {
             return SC_CONFLICT;
         }
         return SC_INTERNAL_SERVER_ERROR;
