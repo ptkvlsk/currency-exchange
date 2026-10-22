@@ -1,7 +1,7 @@
 package com.boo4er.currencyexchange.servlet;
 
-import com.boo4er.currencyexchange.dto.CurrencyResponse;
 import com.boo4er.currencyexchange.exception.ValidationException;
+import com.boo4er.currencyexchange.mapper.ResponseMapper;
 import com.boo4er.currencyexchange.model.Currency;
 import com.boo4er.currencyexchange.service.CurrencyService;
 import jakarta.servlet.ServletException;
@@ -34,6 +34,6 @@ public class CurrencyServlet extends BaseServlet {
         String code = pathInfo.substring(1);
 
         Currency currency = currencyService.getByCode(code);
-        sendJson(resp, SC_OK, new CurrencyResponse(currency));
+        sendJson(resp, SC_OK, ResponseMapper.toCurrencyResponse(currency));
     }
 }

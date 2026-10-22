@@ -1,7 +1,7 @@
 package com.boo4er.currencyexchange.servlet;
 
-import com.boo4er.currencyexchange.dto.ExchangeRateResponse;
 import com.boo4er.currencyexchange.exception.ValidationException;
+import com.boo4er.currencyexchange.mapper.ResponseMapper;
 import com.boo4er.currencyexchange.model.ExchangeRate;
 import com.boo4er.currencyexchange.service.ExchangeRateService;
 import jakarta.servlet.ServletException;
@@ -30,8 +30,7 @@ public class ExchangeRatesServlet extends BaseServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         List<ExchangeRate> rates = exchangeRateService.getAll();
-        List<ExchangeRateResponse> response = rates.stream().map(ExchangeRateResponse::new).toList();
-        sendJson(resp, SC_OK, response);
+        sendJson(resp, SC_OK, ResponseMapper.toExchangeRateResponseList(rates));
     }
 
     @Override
@@ -53,6 +52,6 @@ public class ExchangeRatesServlet extends BaseServlet {
 
         ExchangeRate saved = exchangeRateService.create(baseCode, targetCode, rate);
 
-        sendJson(resp, SC_CREATED, new ExchangeRateResponse(saved));
+        sendJson(resp, SC_CREATED, ResponseMapper.toExchangeRateResponse(saved));
     }
 }
