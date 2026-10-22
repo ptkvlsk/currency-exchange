@@ -1,7 +1,6 @@
 package com.boo4er.currencyexchange.servlet;
 
 import com.boo4er.currencyexchange.dto.ExchangeRateResponse;
-import com.boo4er.currencyexchange.exception.AppException;
 import com.boo4er.currencyexchange.exception.ValidationException;
 import com.boo4er.currencyexchange.model.ExchangeRate;
 import com.boo4er.currencyexchange.service.ExchangeRateService;
@@ -30,38 +29,30 @@ public class ExchangeRatesServlet extends BaseServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        try {
-            List<ExchangeRate> rates = exchangeRateService.getAll();
-            List<ExchangeRateResponse> response = rates.stream().map(ExchangeRateResponse::new).toList();
-            sendJson(resp, SC_OK, response);
-        } catch (AppException e) {
-            handleException(resp, e);
-        }
+        List<ExchangeRate> rates = exchangeRateService.getAll();
+        List<ExchangeRateResponse> response = rates.stream().map(ExchangeRateResponse::new).toList();
+        sendJson(resp, SC_OK, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String baseCode = req.getParameter("baseCurrencyCode");
+        String targetCode = req.getParameter("targetCurrencyCode");
+        String rateStr = req.getParameter("rate");
+
+        requireNonBlank(baseCode, "baseCurrencyCode");
+        requireNonBlank(targetCode, "targetCurrencyCode");
+        requireNonBlank(rateStr, "rate");
+
+        BigDecimal rate;
         try {
-            String baseCode = req.getParameter("baseCurrencyCode");
-            String targetCode = req.getParameter("targetCurrencyCode");
-            String rateStr = req.getParameter("rate");
-
-            requireNonBlank(baseCode, "baseCurrencyCode");
-            requireNonBlank(targetCode, "targetCurrencyCode");
-            requireNonBlank(rateStr, "rate");
-
-            BigDecimal rate;
-            try {
-                rate = new BigDecimal(rateStr);
-            } catch (NumberFormatException e) {
-                throw new ValidationException("Поле rate должно быть числом");
-            }
-
-            ExchangeRate saved = exchangeRateService.create(baseCode, targetCode, rate);
-
-            sendJson(resp, SC_CREATED, new ExchangeRateResponse(saved));
-        } catch (AppException e) {
-            handleException(resp, e);
+            rate = new BigDecimal(rateStr);
+        } catch (NumberFormatException e) {
+            throw new ValidationException("Поле rate должно быть числом");
         }
+
+        ExchangeRate saved = exchangeRateService.create(baseCode, targetCode, rate);
+
+        sendJson(resp, SC_CREATED, new ExchangeRateResponse(saved));
     }
 }

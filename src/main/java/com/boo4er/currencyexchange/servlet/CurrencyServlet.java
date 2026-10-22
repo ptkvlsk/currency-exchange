@@ -1,7 +1,6 @@
 package com.boo4er.currencyexchange.servlet;
 
 import com.boo4er.currencyexchange.dto.CurrencyResponse;
-import com.boo4er.currencyexchange.exception.AppException;
 import com.boo4er.currencyexchange.exception.ValidationException;
 import com.boo4er.currencyexchange.model.Currency;
 import com.boo4er.currencyexchange.service.CurrencyService;
@@ -27,18 +26,14 @@ public class CurrencyServlet extends BaseServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        try {
-            String pathInfo = req.getPathInfo();
-            if (pathInfo == null || pathInfo.equals("/")) {
-                throw new ValidationException("Код валюты отсутствует в адресе");
-            }
-
-            String code = pathInfo.substring(1);
-
-            Currency currency = currencyService.getByCode(code);
-            sendJson(resp, SC_OK, new CurrencyResponse(currency));
-        } catch (AppException e) {
-            handleException(resp, e);
+        String pathInfo = req.getPathInfo();
+        if (pathInfo == null || pathInfo.equals("/")) {
+            throw new ValidationException("Код валюты отсутствует в адресе");
         }
+
+        String code = pathInfo.substring(1);
+
+        Currency currency = currencyService.getByCode(code);
+        sendJson(resp, SC_OK, new CurrencyResponse(currency));
     }
 }

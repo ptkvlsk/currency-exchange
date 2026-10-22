@@ -1,7 +1,6 @@
 package com.boo4er.currencyexchange.servlet;
 
 import com.boo4er.currencyexchange.dto.CurrencyResponse;
-import com.boo4er.currencyexchange.exception.AppException;
 import com.boo4er.currencyexchange.exception.ValidationException;
 import com.boo4er.currencyexchange.model.Currency;
 import com.boo4er.currencyexchange.service.CurrencyService;
@@ -29,21 +28,16 @@ public class CurrenciesServlet extends BaseServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        try {
             List<Currency> currencies = currencyService.getAllCurrencies();
             List<CurrencyResponse> responses = new ArrayList<>();
             for (Currency currency : currencies) {
                 responses.add(new CurrencyResponse(currency));
             }
             sendJson(resp, SC_OK, responses);
-        } catch (AppException e) {
-            handleException(resp, e);
-        }
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        try {
             String name = req.getParameter("name");
             String code = req.getParameter("code");
             String sign = req.getParameter("sign");
@@ -63,9 +57,6 @@ public class CurrenciesServlet extends BaseServlet {
 
             Currency saved = currencyService.create(currency);
             sendJson(resp, SC_CREATED, new CurrencyResponse(saved));
-        } catch (AppException e) {
-            handleException(resp, e);
-        }
 
     }
 }
