@@ -10,6 +10,9 @@ public final class RequestValidator {
 
     private static final Pattern CURRENCY_CODE_PATTERN = Pattern.compile("[A-Z]{3}");
     private static final int MAX_SIGN_LENGTH = 3;
+    private static final BigDecimal MAX_NUMBER = new BigDecimal("1000000000");
+    private static final int MAX_NUMBER_SCALE = 6;
+
 
     private RequestValidator() {
     }
@@ -46,8 +49,16 @@ public final class RequestValidator {
         } catch (NumberFormatException e) {
             throw new ValidationException("Поле " + field + " должно быть числом");
         }
+
         if (number.signum() <= 0) {
             throw new ValidationException("Поле " + field + " должно быть больше нуля");
+        }
+        if (number.compareTo(MAX_NUMBER) > 0) {
+            throw new ValidationException("Поле " + field + " не должно превышать " + MAX_NUMBER.toPlainString());
+        }
+        if (number.stripTrailingZeros().scale() > MAX_NUMBER_SCALE) {
+            throw new ValidationException("Поле " + field + " должно содержать не более "
+                    + MAX_NUMBER_SCALE + " знаков после запятой");
         }
         return number;
     }
