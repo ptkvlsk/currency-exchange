@@ -82,11 +82,11 @@ public class JdbcCurrencyDao implements CurrencyDao {
     }
 
     private Currency mapRow(ResultSet resultSet) throws SQLException {
-        Currency currency = new Currency();
-        currency.setId(resultSet.getInt("id"));
-        currency.setCode(resultSet.getString("code"));
-        currency.setFullName(resultSet.getString("full_name"));
-        currency.setSign(resultSet.getString("sign"));
-        return currency;
+        return new Currency(
+                resultSet.getInt("id"),
+                resultSet.getString("code"),
+                resultSet.getString("full_name"),
+                resultSet.getString("sign")
+        );
     }
 }

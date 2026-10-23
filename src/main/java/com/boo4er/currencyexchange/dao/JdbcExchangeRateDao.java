@@ -126,21 +126,21 @@ public class JdbcExchangeRateDao implements ExchangeRateDao {
     }
 
     private Currency mapCurrency(ResultSet resultSet, String prefix) throws SQLException {
-        Currency currency = new Currency();
-        currency.setId(resultSet.getInt(prefix + "id"));
-        currency.setCode(resultSet.getString(prefix + "code"));
-        currency.setFullName(resultSet.getString(prefix + "full_name"));
-        currency.setSign(resultSet.getString(prefix + "sign"));
-        return currency;
+        return new Currency(
+                resultSet.getInt(prefix + "id"),
+                resultSet.getString(prefix + "code"),
+                resultSet.getString(prefix + "full_name"),
+                resultSet.getString(prefix + "sign")
+        );
     }
 
     private ExchangeRate mapRow(ResultSet resultSet) throws SQLException {
-        ExchangeRate rate = new ExchangeRate();
-        rate.setId(resultSet.getInt("id"));
-        rate.setBaseCurrency(mapCurrency(resultSet, "base_"));
-        rate.setTargetCurrency(mapCurrency(resultSet, "target_"));
-        rate.setRate(resultSet.getBigDecimal("rate"));
-        return rate;
+        return new ExchangeRate(
+                resultSet.getInt("id"),
+                mapCurrency(resultSet, "base_"),
+                mapCurrency(resultSet, "target_"),
+                resultSet.getBigDecimal("rate")
+        );
     }
 }
 
