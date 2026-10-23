@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-public class FormParserUtil {
+public final class FormParserUtil {
 
     public static HttpServletRequest parseFormBody(HttpServletRequest req) throws IOException {
         String contentType = req.getContentType();

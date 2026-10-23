@@ -2,7 +2,7 @@ package com.boo4er.currencyexchange.util;
 
 import java.util.Locale;
 
-public class CurrencyCodeUtil {
+public final class CurrencyCodeUtil {
 
     private CurrencyCodeUtil() {
 
