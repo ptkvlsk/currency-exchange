@@ -4,7 +4,6 @@ import com.boo4er.currencyexchange.dao.ExchangeRateDao;
 import com.boo4er.currencyexchange.exception.NotFoundException;
 import com.boo4er.currencyexchange.model.Currency;
 import com.boo4er.currencyexchange.model.ExchangeRate;
-import com.boo4er.currencyexchange.util.CurrencyCodeUtil;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -46,7 +45,7 @@ public class ExchangeRateService {
     }
 
     private NotFoundException rateNotFound(String baseCode, String targetCode) {
-        return new NotFoundException("Курс для пары " + CurrencyCodeUtil.normalize(baseCode)
-                + " " + CurrencyCodeUtil.normalize(targetCode) + " не найден");
+        return new NotFoundException("Курс для пары " + baseCode
+                + " " + targetCode + " не найден");
     }
 }

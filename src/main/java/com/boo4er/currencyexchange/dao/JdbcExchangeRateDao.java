@@ -4,7 +4,6 @@ import com.boo4er.currencyexchange.exception.AlreadyExistsException;
 import com.boo4er.currencyexchange.exception.DatabaseException;
 import com.boo4er.currencyexchange.model.Currency;
 import com.boo4er.currencyexchange.model.ExchangeRate;
-import com.boo4er.currencyexchange.util.CurrencyCodeUtil;
 import com.boo4er.currencyexchange.util.DatabaseUtil;
 
 import java.math.BigDecimal;
@@ -65,8 +64,8 @@ public class JdbcExchangeRateDao implements ExchangeRateDao {
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement preparedStatement = conn.prepareStatement(SELECT_BY_PAIR_SQL)) {
 
-            preparedStatement.setString(1, CurrencyCodeUtil.normalize(baseCode));
-            preparedStatement.setString(2, CurrencyCodeUtil.normalize(targetCode));
+            preparedStatement.setString(1, baseCode);
+            preparedStatement.setString(2, targetCode);
 
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
@@ -113,8 +112,8 @@ public class JdbcExchangeRateDao implements ExchangeRateDao {
              PreparedStatement preparedStatement = conn.prepareStatement(UPDATE_SQL)) {
 
             preparedStatement.setBigDecimal(1, newRate);
-            preparedStatement.setString(2, CurrencyCodeUtil.normalize(baseCode));
-            preparedStatement.setString(3, CurrencyCodeUtil.normalize(targetCode));
+            preparedStatement.setString(2, baseCode);
+            preparedStatement.setString(3, targetCode);
 
             int rows = preparedStatement.executeUpdate();
             if (rows == 0) {
