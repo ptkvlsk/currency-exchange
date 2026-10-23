@@ -31,10 +31,7 @@ public class ExchangeRateService {
         Currency baseCurrency = currencyService.getByCode(baseCode);
         Currency targetCurrency = currencyService.getByCode(targetCode);
 
-        ExchangeRate exchangeRate = new ExchangeRate();
-        exchangeRate.setBaseCurrency(baseCurrency);
-        exchangeRate.setTargetCurrency(targetCurrency);
-        exchangeRate.setRate(rate);
+        ExchangeRate exchangeRate = new ExchangeRate(baseCurrency, targetCurrency, rate);
 
         return exchangeRateDao.save(exchangeRate);
     }

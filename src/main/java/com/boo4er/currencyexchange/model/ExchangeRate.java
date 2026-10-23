@@ -18,6 +18,10 @@ public class ExchangeRate {
         this.rate = rate;
     }
 
+    public ExchangeRate(Currency baseCurrency, Currency targetCurrency, BigDecimal rate) {
+        this(0,baseCurrency,targetCurrency,rate);
+    }
+
     public int getId() {
         return id;
     }

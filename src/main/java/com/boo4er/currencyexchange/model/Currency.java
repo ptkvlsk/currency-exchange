@@ -17,6 +17,10 @@ public class Currency {
 
     }
 
+    public Currency(String code, String fullName, String sign){
+        this(0,code,fullName,sign);;
+    }
+
     public int getId() {
         return id;
     }

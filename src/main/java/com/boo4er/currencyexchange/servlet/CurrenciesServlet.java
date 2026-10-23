@@ -37,10 +37,7 @@ public class CurrenciesServlet extends BaseServlet {
         String code = RequestValidator.requireCurrencyCode(req.getParameter("code"), "code");
         String sign = RequestValidator.requireSign(req.getParameter("sign"), "sign");
 
-        Currency currency = new Currency();
-        currency.setCode(code);
-        currency.setFullName(name);
-        currency.setSign(sign);
+        Currency currency = new Currency(code, name, sign);
 
         Currency saved = currencyService.create(currency);
         sendJson(resp, SC_CREATED, ResponseMapper.toCurrencyResponse(saved));

@@ -34,13 +34,12 @@ public class ExchangeService {
     }
 
     private Optional<ExchangeRate> findReverse(String from, String to) {
-        return exchangeRateDao.findByPair(to, from).map(reverse -> {
-            ExchangeRate result = new ExchangeRate();
-            result.setBaseCurrency(reverse.getTargetCurrency());
-            result.setTargetCurrency(reverse.getBaseCurrency());
-            result.setRate(BigDecimal.ONE.divide(reverse.getRate(), RATE_SCALE, RoundingMode.HALF_UP));
-            return result;
-        });
+        return exchangeRateDao.findByPair(to, from).map(reverse ->
+                new ExchangeRate(
+                        reverse.getTargetCurrency(),
+                        reverse.getBaseCurrency(),
+                        BigDecimal.ONE.divide(reverse.getRate(), RATE_SCALE, RoundingMode.HALF_UP)));
+
     }
 
     private Optional<ExchangeRate> findCross(String from, String to) {
@@ -54,10 +53,9 @@ public class ExchangeService {
         ExchangeRate base = crossToFrom.get();
         ExchangeRate target = crossToTarget.get();
 
-        ExchangeRate crossRate = new ExchangeRate();
-        crossRate.setBaseCurrency(base.getTargetCurrency());
-        crossRate.setTargetCurrency(target.getTargetCurrency());
-        crossRate.setRate(target.getRate().divide(base.getRate(), RATE_SCALE, RoundingMode.HALF_UP));
-        return Optional.of(crossRate);
+        return Optional.of(new ExchangeRate(
+                base.getTargetCurrency(),
+                target.getTargetCurrency(),
+                target.getRate().divide(base.getRate(), RATE_SCALE, RoundingMode.HALF_UP)));
     }
 }
