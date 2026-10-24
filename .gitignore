@@ -22,7 +22,10 @@ logs/
 
 # ===== Smart Tomcat =====
 .SmartTomcat/
+.smarttomcat/
 
 # ===== OS =====
 .DS_Store
 Thumbs.db
+
+

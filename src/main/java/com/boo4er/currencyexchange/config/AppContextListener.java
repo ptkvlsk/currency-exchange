@@ -1,14 +1,20 @@
 package com.boo4er.currencyexchange.config;
 
+import com.boo4er.currencyexchange.dao.CurrencyDao;
+import com.boo4er.currencyexchange.dao.ExchangeRateDao;
+import com.boo4er.currencyexchange.dao.JdbcCurrencyDao;
+import com.boo4er.currencyexchange.dao.JdbcExchangeRateDao;
+import com.boo4er.currencyexchange.exception.DatabaseException;
+import com.boo4er.currencyexchange.service.CurrencyService;
+import com.boo4er.currencyexchange.service.ExchangeRateService;
+import com.boo4er.currencyexchange.service.ExchangeService;
 import com.boo4er.currencyexchange.util.DatabaseUtil;
+import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.sql.Connection;
-import java.sql.SQLException;
 
 @WebListener
 public class AppContextListener implements ServletContextListener {
@@ -17,16 +23,33 @@ public class AppContextListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        try (Connection connection = DatabaseUtil.getConnection()) {
+        try {
+            DatabaseUtil.init();
             log.info("База данных инициализирована при старте приложения");
-        } catch (SQLException e) {
+        } catch (DatabaseException e) {
             log.error("Не удалось инициализировать БД", e);
-            throw new IllegalStateException("Не удалось подключиться к базе данных при запуске", e);
+            throw new IllegalStateException("Не удалось инициализировать базу данных при запуске", e);
         }
+        registerServices(sce.getServletContext());
+    }
+
+    private void registerServices(ServletContext servletContext) {
+        CurrencyDao currencyDao = new JdbcCurrencyDao();
+        ExchangeRateDao exchangeRateDao = new JdbcExchangeRateDao();
+        ExchangeService exchangeService = new ExchangeService(exchangeRateDao);
+
+        CurrencyService currencyService = new CurrencyService(currencyDao);
+        ExchangeRateService exchangeRateService = new ExchangeRateService(exchangeRateDao, currencyService);
+
+        servletContext.setAttribute(CurrencyService.class.getName(), currencyService);
+        servletContext.setAttribute(ExchangeRateService.class.getName(), exchangeRateService);
+        servletContext.setAttribute(ExchangeService.class.getName(), exchangeService);
+        log.info("Сервисы зарегестрированы");
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
-        System.out.println("Приложение остановлено");
+        DatabaseUtil.close();
+        log.info("Приложение остановлено");
     }
 }

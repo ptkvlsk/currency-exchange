@@ -1,12 +1,9 @@
 package com.boo4er.currencyexchange.servlet;
 
-import com.boo4er.currencyexchange.dao.CurrencyDao;
-import com.boo4er.currencyexchange.dao.ExchangeRateDao;
-import com.boo4er.currencyexchange.dto.ExchangeRateResponse;
-import com.boo4er.currencyexchange.exception.AppException;
-import com.boo4er.currencyexchange.exception.ValidationException;
-import com.boo4er.currencyexchange.model.Currency;
+import com.boo4er.currencyexchange.mapper.ResponseMapper;
 import com.boo4er.currencyexchange.model.ExchangeRate;
+import com.boo4er.currencyexchange.service.ExchangeRateService;
+import com.boo4er.currencyexchange.validation.RequestValidator;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,51 +20,29 @@ import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 
 public class ExchangeRatesServlet extends BaseServlet {
 
-    private final CurrencyDao currencyDao = new CurrencyDao();
-    private final ExchangeRateDao exchangeRateDao = new ExchangeRateDao();
+    private ExchangeRateService exchangeRateService;
+
+    @Override
+    public void init() {
+        exchangeRateService = getService(ExchangeRateService.class);
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        try {
-            List<ExchangeRate> rates = exchangeRateDao.findAll();
-            List<ExchangeRateResponse> response = rates.stream().map(ExchangeRateResponse::new).toList();
-            sendJson(resp, SC_OK, response);
-        } catch (AppException e) {
-            handleException(resp, e);
-        }
+        List<ExchangeRate> rates = exchangeRateService.getAll();
+        sendJson(resp, SC_OK, ResponseMapper.toExchangeRateResponseList(rates));
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        try {
-            String baseCode = req.getParameter("baseCurrencyCode");
-            String targetCode = req.getParameter("targetCurrencyCode");
-            String rateStr = req.getParameter("rate");
+        String baseCode = RequestValidator.requireCurrencyCode(req.getParameter("baseCurrencyCode"), "baseCurrencyCode");
+        String targetCode = RequestValidator.requireCurrencyCode(req.getParameter("TargetCurrencyCode"), "targetCurrencyCode");
+        BigDecimal rate = RequestValidator.requirePositiveNumber(req.getParameter("rate"), "rate");
 
-            requireNonBlank(baseCode, "baseCurrencyCode");
-            requireNonBlank(targetCode, "targetCurrencyCode");
-            requireNonBlank(rateStr, "rate");
+        RequestValidator.requireDifferent(baseCode, targetCode, "Валюты в паре должны быть разными");
 
-            BigDecimal rate;
-            try {
-                rate = new BigDecimal(rateStr);
-            } catch (NumberFormatException e) {
-                throw new ValidationException("Поле rate должно быть числом");
-            }
+        ExchangeRate saved = exchangeRateService.create(baseCode, targetCode, rate);
 
-            Currency baseCurrency = currencyDao.findByCode(baseCode);
-            Currency targetCurrency = currencyDao.findByCode(targetCode);
-
-            ExchangeRate exchangeRate = new ExchangeRate();
-
-            exchangeRate.setBaseCurrency(baseCurrency);
-            exchangeRate.setTargetCurrency(targetCurrency);
-            exchangeRate.setRate(rate);
-
-            ExchangeRate saved = exchangeRateDao.save(exchangeRate);
-            sendJson(resp, SC_CREATED, new ExchangeRateResponse(saved));
-        } catch (AppException e) {
-            handleException(resp, e);
-        }
+        sendJson(resp, SC_CREATED, ResponseMapper.toExchangeRateResponse(saved));
     }
 }

@@ -1,44 +1,11 @@
 package com.boo4er.currencyexchange.dto;
 
-import com.boo4er.currencyexchange.model.ExchangeRate;
-
 import java.math.BigDecimal;
 
-public class ExchangeResponse {
-    private CurrencyResponse baseCurrency;
-    private CurrencyResponse targetCurrency;
-    private BigDecimal rate;
-    private BigDecimal amount;
-    private BigDecimal convertedAmount;
+public record ExchangeResponse(CurrencyResponse baseCurrency,
+                               CurrencyResponse targetCurrency,
+                               BigDecimal rate,
+                               BigDecimal amount,
+                               BigDecimal convertedAmount) {
 
-    public ExchangeResponse() {
-    }
-
-    public ExchangeResponse(ExchangeRate exchangeRate, BigDecimal amount, BigDecimal convertedAmount) {
-        this.baseCurrency = new CurrencyResponse(exchangeRate.getBaseCurrency());
-        this.targetCurrency = new CurrencyResponse(exchangeRate.getTargetCurrency());
-        this.rate = exchangeRate.getRate();
-        this.amount = amount;
-        this.convertedAmount = convertedAmount;
-    }
-
-    public CurrencyResponse getBaseCurrency() {
-        return baseCurrency;
-    }
-
-    public CurrencyResponse getTargetCurrency() {
-        return targetCurrency;
-    }
-
-    public BigDecimal getRate() {
-        return rate;
-    }
-
-    public BigDecimal getAmount() {
-        return amount;
-    }
-
-    public BigDecimal getConvertedAmount() {
-        return convertedAmount;
-    }
 }
