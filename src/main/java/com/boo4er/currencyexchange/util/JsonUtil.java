@@ -2,8 +2,10 @@ package com.boo4er.currencyexchange.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-public class JsonUtil {
+public final class JsonUtil {
     private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    private JsonUtil() {}
 
     public static String toJson(Object obj) throws Exception {
         return MAPPER.writeValueAsString(obj);

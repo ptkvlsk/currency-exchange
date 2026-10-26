@@ -1,12 +1,13 @@
 package com.boo4er.currencyexchange.model;
 
-public class Currency {
-    private int id;
-    private String code;
-    private String fullName;
-    private String sign;
+public final class Currency {
+    private final int id;
+    private final String code;
+    private final String fullName;
+    private final String sign;
 
-    public Currency() {
+    public Currency(String code, String fullName, String sign) {
+        this(0, code, fullName, sign);
     }
 
     public Currency(int id, String code, String fullName, String sign) {
@@ -16,6 +17,7 @@ public class Currency {
         this.sign = sign;
 
     }
+
 
     public int getId() {
         return id;
@@ -33,21 +35,7 @@ public class Currency {
         return sign;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
 
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
-
-    public void setSign(String sign) {
-        this.sign = sign;
-    }
 
     @Override
     public String toString() {

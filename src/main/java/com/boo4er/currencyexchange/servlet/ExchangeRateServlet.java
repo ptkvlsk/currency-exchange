@@ -1,10 +1,10 @@
 package com.boo4er.currencyexchange.servlet;
 
-import com.boo4er.currencyexchange.dao.ExchangeRateDao;
-import com.boo4er.currencyexchange.dto.ExchangeRateResponse;
-import com.boo4er.currencyexchange.exception.AppException;
 import com.boo4er.currencyexchange.exception.ValidationException;
+import com.boo4er.currencyexchange.mapper.ResponseMapper;
 import com.boo4er.currencyexchange.model.ExchangeRate;
+import com.boo4er.currencyexchange.service.ExchangeRateService;
+import com.boo4er.currencyexchange.validation.RequestValidator;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,7 +19,12 @@ import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 
 public class ExchangeRateServlet extends BaseServlet {
 
-    private final ExchangeRateDao exchangeRateDao = new ExchangeRateDao();
+    private ExchangeRateService exchangeRateService;
+
+    @Override
+    public void init() {
+        exchangeRateService = getService(ExchangeRateService.class);
+    }
 
     private String[] extractPair(HttpServletRequest req) throws ValidationException {
         String pathInfo = req.getPathInfo();
@@ -32,40 +37,26 @@ public class ExchangeRateServlet extends BaseServlet {
         if (pair.length() != 6) {
             throw new ValidationException("Некорректная валютная пара");
         }
-        return new String[]{pair.substring(0, 3), pair.substring(3)};
+        String base = RequestValidator.requireCurrencyCode(pair.substring(0, 3), "baseCurrencyCode");
+        String target = RequestValidator.requireCurrencyCode(pair.substring(3), "targetCurrencyCode");
+        return new String[]{base, target};
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        try {
-            String[] pair = extractPair(req);
-            ExchangeRate rate = exchangeRateDao.findByPair(pair[0], pair[1]);
-            sendJson(resp, SC_OK, new ExchangeRateResponse(rate));
-        } catch (AppException e) {
-            handleException(resp, e);
-        }
+        String[] pair = extractPair(req);
+        ExchangeRate rate = exchangeRateService.getByPair(pair[0], pair[1]);
+        sendJson(resp, SC_OK, ResponseMapper.toExchangeRateResponse(rate));
 
     }
 
+    @Override
     protected void doPatch(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        try {
-            String[] pair = extractPair(req);
+        String[] pair = extractPair(req);
 
-            String rateStr = req.getParameter("rate");
+        BigDecimal rate = RequestValidator.requirePositiveNumber(req.getParameter("rate"), "rate");
 
-            requireNonBlank(rateStr, "rate");
-
-            BigDecimal rate;
-            try {
-                rate = new BigDecimal(rateStr);
-            } catch (NumberFormatException e) {
-                throw new ValidationException("Поле rate должно быть числом");
-            }
-
-            ExchangeRate updated = exchangeRateDao.update(pair[0], pair[1], rate);
-            sendJson(resp, SC_OK, new ExchangeRateResponse(updated));
-        } catch (AppException e) {
-            handleException(resp, e);
-        }
+        ExchangeRate updated = exchangeRateService.updateRate(pair[0], pair[1], rate);
+        sendJson(resp, SC_OK, ResponseMapper.toExchangeRateResponse(updated));
     }
 }

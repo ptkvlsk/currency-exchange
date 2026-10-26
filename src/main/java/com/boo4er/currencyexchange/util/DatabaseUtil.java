@@ -1,59 +1,76 @@
 package com.boo4er.currencyexchange.util;
 
+import com.boo4er.currencyexchange.exception.DatabaseException;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Properties;
 
-public class DatabaseUtil {
+public final class DatabaseUtil {
 
-    private static final String DB_PATH = "data/currency.db";
-    private static final String DB_URL = "jdbc:sqlite:" + DB_PATH;
+    private static volatile HikariDataSource dataSource;
     private static final String INIT_SCRIPT_PATH = "db/init.sql";
-    private static boolean isInitialized = false;
     private static final Logger log = LoggerFactory.getLogger(DatabaseUtil.class);
 
-    static {
-        try {
-            Class.forName("org.sqlite.JDBC");
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException("Не удалось загрузить драйвер SQLite", e);
-        }
+    private DatabaseUtil() {
     }
 
     public static Connection getConnection() throws SQLException {
-        if (!isInitialized) {
-            initializeDatabase();
+        HikariDataSource ds = dataSource;
+        if (ds == null) {
+            throw new IllegalStateException("База данных не инициализирована: сначала нужно вызвать DatabaseUtil.init()");
         }
-        return DriverManager.getConnection(DB_URL);
+        return ds.getConnection();
     }
 
-    private static void initializeDatabase() {
-        File dbFile = new File(DB_PATH);
-        File parentDir = dbFile.getParentFile();
+    public static synchronized void init() {
+        if (dataSource != null) {
+            return;
+        }
+
+        String dbPath = resolveDbPath();
+        File parentDir = new File(dbPath).getParentFile();
         if (parentDir != null && !parentDir.exists()) {
             parentDir.mkdirs();
         }
-        if (!dbFile.exists()) {
+
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl("jdbc:sqlite:" + dbPath);
+        config.setDriverClassName("org.sqlite.JDBC");
+        config.setMaximumPoolSize(5);
+
+        try {
+            dataSource = new HikariDataSource(config);
             executeInitScript();
+        } catch (RuntimeException e) {
+            if (dataSource != null) {
+                dataSource.close();
+                dataSource = null;
+            }
+            throw e;
         }
-        isInitialized = true;
+    }
+
+    public static synchronized void close() {
+        if (dataSource != null) {
+            dataSource.close();
+            dataSource = null;
+            log.info("Пул соединений закрыт");
+        }
     }
 
     private static void executeInitScript() {
         InputStream inputStream = DatabaseUtil.class.getClassLoader().getResourceAsStream(INIT_SCRIPT_PATH);
 
         if (inputStream == null) {
-            log.error("Файл init.sql не найден в ресурсах");
-            return;
+            throw new DatabaseException("Файл " + INIT_SCRIPT_PATH + " не найден в ресурсах");
         }
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
@@ -67,7 +84,7 @@ public class DatabaseUtil {
 
             String[] queries = sql.toString().split(";");
 
-            try (Connection connection = DriverManager.getConnection(DB_URL);
+            try (Connection connection = dataSource.getConnection();
                  Statement statement = connection.createStatement()) {
                 for (String query : queries) {
                     String trimmed = query.trim();
@@ -78,19 +95,36 @@ public class DatabaseUtil {
                 log.info("База данных успешно инициализирована");
             } catch (SQLException e) {
                 log.error("Ошибка при инициализации базы данных", e);
+                throw new DatabaseException("Не удалось инициализировать базу данных", e);
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             log.error("Ошибка при чтении файла init.sql", e);
+            throw new DatabaseException("Не удалось прочитать файл init.sql", e);
         }
     }
 
-    public static void closeConnection(Connection connection) {
-        if (connection != null) {
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                log.error("Ошибка при закрытии соединения", e);
+    private static Properties loadProperties() {
+        try (InputStream in = DatabaseUtil.class.getClassLoader().getResourceAsStream("db.properties")) {
+            if (in == null) {
+                throw new DatabaseException("Файл db.properties не найден в ресурсах");
             }
+            Properties properties = new Properties();
+            properties.load(in);
+            return properties;
+        } catch (IOException e) {
+            throw new DatabaseException("Не удалось прочитать файл db.properties", e);
         }
+    }
+
+    private static String resolveDbPath() {
+        String fromEnv = System.getenv("DB_PATH");
+        if (fromEnv != null && !fromEnv.isBlank()) {
+            return fromEnv.trim();
+        }
+        String fromFile = loadProperties().getProperty("db.path");
+        if (fromFile == null || fromFile.isBlank()) {
+            throw new DatabaseException("В db.properties не задан параметр db.path");
+        }
+        return fromFile.trim();
     }
 }
