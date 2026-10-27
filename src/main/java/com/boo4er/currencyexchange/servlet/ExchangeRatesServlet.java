@@ -36,7 +36,7 @@ public class ExchangeRatesServlet extends BaseServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String baseCode = RequestValidator.requireCurrencyCode(req.getParameter("baseCurrencyCode"), "baseCurrencyCode");
-        String targetCode = RequestValidator.requireCurrencyCode(req.getParameter("TargetCurrencyCode"), "targetCurrencyCode");
+        String targetCode = RequestValidator.requireCurrencyCode(req.getParameter("targetCurrencyCode"), "targetCurrencyCode");
         BigDecimal rate = RequestValidator.requirePositiveNumber(req.getParameter("rate"), "rate");
 
         RequestValidator.requireDifferent(baseCode, targetCode, "Валюты в паре должны быть разными");
