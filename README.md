@@ -15,11 +15,11 @@
 
 ## 🌐 Live Demo
 
-**🔗 [http://77.221.142.17/](http://77.221.142.17/)**
+**🔗 [https://ptkvlsk.ru/](https://ptkvlsk.ru/)**
 
-Развёрнуто на VPS (Aeza, Ubuntu 26.04) под управлением Tomcat 10 + Nginx (reverse-proxy).
+Развёрнуто на VPS (Ubuntu 24.04): Tomcat 10 слушает только localhost, перед ним Nginx (reverse proxy) с HTTPS-сертификатом Let's Encrypt.
 
-Deployed on VPS (Aeza, Ubuntu 26.04) with Tomcat 10 + Nginx (reverse-proxy).
+Deployed on a VPS (Ubuntu 24.04): Tomcat 10 listens on localhost only, with Nginx (reverse proxy) and a Let's Encrypt HTTPS certificate in front of it.
 
 ---
 
@@ -29,7 +29,7 @@ Deployed on VPS (Aeza, Ubuntu 26.04) with Tomcat 10 + Nginx (reverse-proxy).
 |-----------|------------|
 | **Язык / Language** | Java 17 |
 | **Web / HTTP** | Jakarta Servlet API 6.0 (без фреймворков) |
-| **База данных / Database** | SQLite + JDBC |
+| **База данных / Database** | SQLite + JDBC, пул соединений HikariCP / connection pool |
 | **JSON** | Jackson Databind |
 | **Логирование / Logging** | SLF4J + Logback |
 | **Сборка / Build** | Maven (WAR) |
@@ -56,6 +56,21 @@ Deployed on VPS (Aeza, Ubuntu 26.04) with Tomcat 10 + Nginx (reverse-proxy).
 
 ---
 
+## 🏗 Архитектура / Architecture
+
+```
+Клиент → Фильтры → Servlet → Service → DAO → SQLite
+Client → Filters → Servlet → Service → DAO → SQLite
+```
+
+- **Servlet** — только HTTP: достаёт параметры, валидирует их, вызывает сервис, отправляет ответ · HTTP only: reads and validates parameters, calls a service, sends the response
+- **Service** — бизнес-логика, в том числе конвертация валют (прямой, обратный и кросс-курс) · business logic, including currency conversion
+- **DAO** — SQL-запросы; сервисы зависят от интерфейсов, а не от JDBC-классов · SQL queries; services depend on interfaces, not on JDBC classes
+- **ExceptionHandlingFilter** — единая точка обработки ошибок: тип исключения превращается в HTTP-код и JSON · the single place that maps exceptions to HTTP codes and JSON
+- **AppContextListener** — при старте инициализирует БД, создаёт DAO и сервисы и кладёт сервисы в `ServletContext`; при остановке закрывает пул соединений · initializes the DB at startup, creates DAOs and services and publishes services to the `ServletContext`; closes the connection pool on shutdown
+
+---
+
 ## 📡 API Endpoints
 
 | Method | URL | Description |
@@ -72,7 +87,7 @@ Deployed on VPS (Aeza, Ubuntu 26.04) with Tomcat 10 + Nginx (reverse-proxy).
 
 **Формат ошибок / Error format:**
 ```json
-{ "message": "Валюта не найдена" }
+{ "message": "Валюта с кодом XXX не найдена" }
 ```
 
 **HTTP-коды:** `200`, `201`, `400`, `404`, `409`, `500`
@@ -81,10 +96,10 @@ Deployed on VPS (Aeza, Ubuntu 26.04) with Tomcat 10 + Nginx (reverse-proxy).
 
 ```bash
 # Список валют
-curl http://77.221.142.17/currencies
+curl https://ptkvlsk.ru/currencies
 
 # Конвертация
-curl "http://77.221.142.17/exchange?from=USD&to=RUB&amount=100"
+curl "https://ptkvlsk.ru/exchange?from=USD&to=RUB&amount=100"
 ```
 
 ```json
@@ -99,13 +114,29 @@ curl "http://77.221.142.17/exchange?from=USD&to=RUB&amount=100"
 
 ---
 
+## 🔎 Валидация входных данных / Input Validation
+
+| Поле / Field | Правило / Rule |
+|--------------|----------------|
+| Код валюты (`code`, `baseCurrencyCode`, `targetCurrencyCode`, `from`, `to`, пара в URL) | Три латинские буквы, регистр не важен · Three Latin letters, case-insensitive |
+| `name`, `sign` | Не пустые, пробелы по краям обрезаются; `sign` не длиннее 3 символов · Not blank, trimmed; `sign` up to 3 characters |
+| `rate`, `amount` | Число больше нуля, не больше 1 000 000 000, не более 6 знаков после запятой · Number > 0, at most 1 000 000 000, at most 6 decimal places |
+| Валютная пара при создании курса / Pair on create | Валюты должны различаться · Currencies must be different |
+
+При нарушении правил API возвращает `400` с описанием проблемы.
+
+On violation the API responds with `400` and a description of the problem.
+
+---
+
 ## ✅ Тестирование / Testing
 
 API прошёл **автоматическое тестирование** ботом — **98/98 кейсов пройдено**:
 
 - ✅ Все CRUD-операции для валют и курсов
 - ✅ Все три сценария конвертации (прямой, обратный, кросс-курс через USD)
-- ✅ Валидация входных данных (пустые поля, некорректные значения, длина `sign`)
+- ✅ Валидация входных данных (пустые поля, некорректные значения, формат кодов, положительные значения, границы)
+- ✅ Валюты в паре должны различаться
 - ✅ Обработка ошибок (400, 404, 409)
 - ✅ Корректная структура JSON-ответов
 - ✅ Правильные HTTP-коды и `Content-Type`
@@ -116,14 +147,22 @@ API прошёл **автоматическое тестирование** бо�
 
 ```
 src/main/java/com/boo4er/currencyexchange/
-├── config/       — слушатели / listeners
-├── dao/          — доступ к БД / data access
-├── dto/          — Data Transfer Objects
-├── exception/    — иерархия исключений / exceptions
-├── filter/       — сервлет-фильтры / filters
-├── model/        — модели данных / domain models
-├── servlet/      — REST-контроллеры / servlets
-└── util/         — утилиты / utilities
+├── config/       — AppContextListener: старт БД, сборка зависимостей / startup and wiring
+├── dao/          — интерфейсы и JDBC-реализации / DAO interfaces and JDBC implementations
+├── dto/          — ответы API (record) / response records
+├── exception/    — исключения без привязки к HTTP / HTTP-agnostic exceptions
+├── filter/       — ExceptionHandlingFilter, PatchFilter
+├── mapper/       — модель → DTO / model → DTO
+├── model/        — неизменяемые модели / immutable domain models
+├── service/      — бизнес-логика, конвертация / business logic, conversion
+├── servlet/      — тонкие REST-контроллеры / thin servlets
+├── util/         — утилиты / utilities
+└── validation/   — проверка и нормализация входных данных / input validation
+
+src/main/resources/
+├── db/init.sql       — схема и начальные данные / schema and seed data
+├── db.properties     — настройки БД / database settings
+└── logback.xml       — логирование / logging
 ```
 
 ---
@@ -184,6 +223,48 @@ http://localhost:8080/
 
 База данных SQLite создастся автоматически при первом запуске.
 The SQLite database is created automatically on first launch.
+
+---
+
+## ⚙️ Конфигурация / Configuration
+
+**Путь к базе данных / Database path**
+
+По умолчанию задан в `src/main/resources/db.properties`:
+Defined by default in `src/main/resources/db.properties`:
+
+```properties
+db.path=data/currency.db
+```
+
+Переменная окружения `DB_PATH` имеет приоритет над файлом:
+The `DB_PATH` environment variable takes precedence over the file:
+
+```bash
+DB_PATH=/var/lib/currency-exchange/currency.db $CATALINA_HOME/bin/startup.sh
+```
+
+Относительный путь считается от рабочей директории процесса Tomcat, поэтому на сервере лучше указывать абсолютный.
+A relative path is resolved from the Tomcat process working directory, so use an absolute path on a server.
+
+**Логи / Logs**
+
+Пишутся в консоль и в файл, настройки в `src/main/resources/logback.xml`.
+Written to the console and to a file, see `src/main/resources/logback.xml`.
+
+---
+
+## 🖥 Деплой / Deployment
+
+```
+Клиент → Nginx (80/443, HTTPS) → Tomcat (127.0.0.1:8080) → SQLite
+Client → Nginx (80/443, HTTPS) → Tomcat (127.0.0.1:8080) → SQLite
+```
+
+- WAR разворачивается как `ROOT.war`, поэтому приложение открывается в корне сайта · the WAR is deployed as `ROOT.war`, so the app is served from the site root
+- Tomcat слушает только `127.0.0.1`, наружу открыты только порты Nginx · Tomcat listens on `127.0.0.1` only; only Nginx ports are exposed
+- Путь к БД задаётся переменной `DB_PATH` (например, `/var/lib/currency-exchange/currency.db`) · the DB path is set via `DB_PATH`
+- HTTPS-сертификат выпущен Let's Encrypt (certbot), продлевается автоматически · the HTTPS certificate is issued by Let's Encrypt (certbot) and renewed automatically
 
 ---
 
